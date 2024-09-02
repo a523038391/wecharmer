@@ -11,6 +11,7 @@
 item = {"李朋测试品-凳子-绿色-S":{"id":5452,"skucode":"LIPENG456-B-P"},"女士西装0125-浅灰-XS":{"id":1002,"skucode":"B-XF2-00A-D-9-0125-QGR-XS"}}
 
 
+
 #仓库
 warehouse = {"李朋自营仓":{"id":150,"warehouseName":"李朋自营仓"},"西邮WPLA5海外仓":{"id":11},"FBA流水测试":{"id":135}}
 

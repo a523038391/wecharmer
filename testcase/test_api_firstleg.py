@@ -10,6 +10,7 @@ import random
 import string
 from datetime import datetime
 
+import allure
 import pytest
 
 from conf.baseconfig import waveecharmer_Host
@@ -63,6 +64,7 @@ class TestApiFirstLeg:
     def teardown_method(self):
         pass
 
+    @allure.feature("创建备货单")
     def test_create_stockupbill(self):
         stockupbilldata=StockupBill().create_stockupbill_link(self.cookies_wc,self.skucode,self.shopId, self.warehouseId, self.targetWarehouseId, self.operateDivisionId, self.platformEnName)
 
@@ -72,8 +74,8 @@ class TestApiFirstLeg:
         stockUpBillCode=json.loads(stockupbill_resp.text)["result"]["items"][0]["stockUpBillCode"]
         assert stockupbilldata["sourceCode"]== stockUpBillCode
 
-
-
+    @allure.story("头程链路")
+    @allure.title("备货单-打印装箱-装柜通知-装柜列表")
     def test_stockupbill_link(self):
         #创建备货单
         stockupbilldata = StockupBill().create_stockupbill_link(self.cookies_wc, self.skucode, self.shopId,
@@ -93,9 +95,9 @@ class TestApiFirstLeg:
         # 断言
         containerbill_resp = ContainerBill().get_containerbill(self.cookies_wc, self.billNo)
         containerBillCode = json.loads(containerbill_resp.text)["result"]["items"][0]["containerBillCode"]
-        assert containerbilldata == containerBillCode
+        assert containerbilldata["containerBillCode"] == containerBillCode
 
-
+    @allure.title("发货单-打印装箱-装柜通知-装柜列表")
     def test_shipmentbill_link(self):
         #创建发货单
         shipmentbilldata=ShipmentBill().fba_shipmentbill_link(self.cookies_wc, self.fbaShipmentCode, self.warehouseId,
@@ -121,7 +123,7 @@ class TestApiFirstLeg:
         #断言
         containerbill_resp=ContainerBill().get_containerbill(self.cookies_wc,self.billNo)
         containerBillCode=json.loads(containerbill_resp.text)["result"]["items"][0]["containerBillCode"]
-        assert containerbilldata == containerBillCode
+        assert containerbilldata["containerBillCode"] == containerBillCode
 
 if __name__ == '__main__':
     #pytest.main(['-vs', 'test_api_firstleg.py',"test_stockupbill_link"])

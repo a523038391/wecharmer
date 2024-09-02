@@ -6,6 +6,7 @@
 # @File : loadingadvice.py
 # @Project : wecharmer
 import json
+import time
 from datetime import datetime, timedelta
 
 from conf.baseconfig import waveecharmer_Host
@@ -100,6 +101,8 @@ class LoadingAdvice:
         LoadingAdvice_tesp =LoadingAdvice().query_loadingadvice( url, cookies)
         loadingadviceid=json.loads(LoadingAdvice_tesp.text)["result"]["items"][0]["id"]
 
+        time.sleep(2)
+
         #确认发货
         LoadingAdvice().confirmshipment_loadingadvice(cookies,loadingadviceid)
 
@@ -109,4 +112,4 @@ class LoadingAdvice:
 
 if __name__ == '__main__':
     cookies = Login.loginWecharmer()
-    LoadingAdvice().loadingadvice_link(cookies,"3242222",502,"150","李朋自营仓",770,"BH24062000048")
+    LoadingAdvice().loadingadvice_link(cookies,"3242222",507,"150","李朋自营仓",1158,"DC24082800026")
