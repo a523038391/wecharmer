@@ -76,6 +76,18 @@ class PurchaseOrder:
         print("送审resp-----------\n" + resp.text)
         return resp
 
+
+    def get_purchaseorder(self,cookies, purchaseorderid):
+        """
+        根据id获取采购单明细
+        :return:
+        """
+        url = f"{waveecharmer_Host}/api/purchaseorder/{purchaseorderid}/detail/all"
+        resp = requests.get(url=url, headers=cookies)
+        print("获取采购单明细resp-----------\n" + resp.text)
+        return resp
+
+
     def create_purchaseorder_link(self, cookies, shopId, warehouseId, operateDivisionId, purchaserId):
         """
         创建采购单链路
