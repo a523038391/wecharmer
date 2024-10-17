@@ -9,6 +9,7 @@ import json
 from datetime import datetime
 
 import requests
+import random
 
 from conf.baseconfig import waveecharmer_Host
 from lib.firstleg.deliverybill import DeliveryBill
@@ -27,6 +28,8 @@ class ContainerBill:
         # 如果你只需要年月日，不需要时间部分，可以将其格式化为字符串
         self.formatted_date = now.strftime('%Y-%m-%d')
 
+        self.random_number = ''.join(str(random.randint(0, 9)) for _ in range(10))
+
     def get_containerbill(self, cookies, billNo):
         """
         根据提单号查询货柜列表
@@ -40,7 +43,7 @@ class ContainerBill:
         print("根据提单号查询货柜列表resp-----------\n" + resp.text)
         return resp
 
-    def create_containerbill(self, cookies, sourceBillType, vouchingClerkId, vouchingClerkName, ladingNo,
+    def create_containerbill(self, cookies, sourceBillType, vouchingClerkId, vouchingClerkName,
                              deliveryBillId):
         """
         创建货柜列表
@@ -61,9 +64,9 @@ class ContainerBill:
             "destinationPortId": 8,
             "vouchingClerkId": vouchingClerkId,
             "vouchingClerkName": vouchingClerkName,
-            "containerNo": "",
+            "containerNo": "lipeng" + self.random_number,
             "storageNo": "",
-            "ladingNo": ladingNo,
+            "ladingNo": "lipeng" + self.random_number,
             "freightForwardingId": None,
             "transportationTypeId": None,
             "shipVoyage": "",
@@ -130,6 +133,16 @@ class ContainerBill:
         print("生成出口日期resp-----------\n" + resp.text)
         return resp
 
+    def conservancy_clearance_batch(self, cookies, containerBillid, payload):
+        """
+        清关维护
+        :return:
+        """
+        url = f"{waveecharmer_Host}/api/containerbill/{containerBillid}/conservancy-clearance-batch"
+        resp = requests.post(url=url, headers=cookies, json=payload)
+        print("清关维护resp-----------\n" + resp.text)
+        return resp
+
     def create_conservancy_estimated_batch(self, cookies, containerBillid, payload):
         """
         保存暂估费用
@@ -150,8 +163,8 @@ class ContainerBill:
         print("保存结算费用resp-----------\n" + resp.text)
         return resp
 
-    def create_containerbill_link(self, cookies, sourceCode, sourceBillType, vouchingClerkId, vouchingClerkName,
-                                  ladingNo):
+    def create_containerbill_link(self, cookies, sourceCode, sourceBillType, vouchingClerkId, vouchingClerkName,customsDeclarationSubId
+                                  ):
         # 查询出货单
         url = f"{waveecharmer_Host}/api/deliverybill/page?deliveryBillStates=1,2,3,4&sorts=%7B%22field%22:%22id%22,%22order%22:%22desc%22%7D&sourceCodes=%22{sourceCode}%22&pageIndex=1&pageSize=10"
         DeliveryBill_resp = DeliveryBill().query_deliverybill(url, cookies)
@@ -159,44 +172,11 @@ class ContainerBill:
 
         # 创建货柜列表
         ContainerBill_resp = ContainerBill().create_containerbill(cookies, sourceBillType, vouchingClerkId,
-                                                                  vouchingClerkName, ladingNo, deliveryBillId)
+                                                                  vouchingClerkName,  deliveryBillId)
         containerBillCode = json.loads(ContainerBill_resp.text)['result']["containerBillCode"]
         containerBillid = json.loads(ContainerBill_resp.text)['result']['id']
+
         containerBill_data = {"containerBillCode": containerBillCode, "containerBillid": containerBillid}
-        return containerBill_data
-
-    def booking_deliverybill_link(self, cookies, billOfLadingCode, sourceBillCategory, shopId, warehouseId,
-                                  warehouseName, operateDivisionId, purchaserId, purchasername, targetWarehouseId,
-                                  sourceBillType, customsDeclarationSubId):
-        """
-        创建订舱单发货全链路
-        :param isLCL:是否拼柜
-        :param cargoReadyDay:货号日期
-        :param containerId:货柜id
-        :param purchaseOrderId:采购单id
-        :param supplierAccountId:供应商账户id
-        :param purchaseBusinessType:备货 出运 常规
-        :param purchaseBusinessType:备货 出运 常规
-        :param dimensionType: 生成报关合同类型
-        :param customsDeclarationSubId: 报关主体
-        :return:
-        """
-        # 创建订舱单-验货完成
-        booking_data = Inspection().create_inspection_link(cookies, shopId, warehouseId, operateDivisionId, purchaserId,
-                                                           targetWarehouseId)
-
-        LoadingAdvice().loadingadvice_link(cookies, billOfLadingCode, sourceBillCategory, warehouseId, warehouseName,
-                                           booking_data["bookingid"], booking_data["bookingcode"])
-
-        # 根据订舱单号查询备货单
-        url = f"{waveecharmer_Host}/api/stockupbill/page?stockUpBillStatuses=1,2,3,5,6&sorts=%7B%22field%22:%22id%22,%22order%22:%22desc%22%7D&bookingBillCode={booking_data["bookingcode"]}&pageIndex=1&pageSize=10"
-        sourceCode_resp = StockupBill().query_stockupbill(url, cookies)
-        sourceCode = json.loads(sourceCode_resp.text)["result"]["items"][0]["stockUpBillCode"]
-
-        # 创建货柜列表
-        containerBill_data = ContainerBill().create_containerbill_link(cookies, sourceCode, sourceBillType, purchaserId,
-                                                                       purchasername,
-                                                                       billOfLadingCode)
 
         # 查询生成报关合同维度
         declaration_contract_resp = ContainerBill().get_declaration_contract(cookies,
@@ -252,6 +232,13 @@ class ContainerBill:
 
         ContainerBill().create_conservancy_export_date(cookies, containerBill_data["containerBillid"],
                                                        export_date_payload)
+        # 清关维护
+        conservancy_payload = {
+            "currency": "CNY",
+            "amount": 99,
+            "clearanceApportionmentMethod": 1
+        }
+        ContainerBill().conservancy_clearance_batch(cookies, containerBill_data["containerBillid"], conservancy_payload)
 
         # 保存暂估费用
         estimated_batch_payload = [
@@ -282,11 +269,120 @@ class ContainerBill:
                 "isEffective": True
             }
         ]
-        ContainerBill().create_conservancy_settlement_batch(cookies, containerBill_data["containerBillid"],settlement_batch_payload)
+        ContainerBill().create_conservancy_settlement_batch(cookies, containerBill_data["containerBillid"],
+                                                            settlement_batch_payload)
+        return containerBill_data
+
+    def stockupbill_containerBill_link(self, cookies, sourceBillCategory,sourceType, shopId, warehouseId,
+                                  warehouseName, operateDivisionId, purchaserId, purchaserName, targetWarehouseId,
+                                  sourceBillType, customsDeclarationSubId,product_code):
+        """
+        创建备货单发货全链路
+        :param isLCL:是否拼柜
+        :param cargoReadyDay:货号日期
+        :param containerId:货柜id
+        :param purchaseOrderId:采购单id
+        :param supplierAccountId:供应商账户id
+        :param purchaseBusinessType:备货 出运 常规
+        :param purchaseBusinessType:备货 出运 常规
+        :param dimensionType: 生成报关合同类型
+        :param customsDeclarationSubId: 报关主体
+        :return:
+        """
+        # 备货单按件发货-装柜
+        stockupbilldata=LoadingAdvice().stockupbill_loadingadvice_link(cookies,sourceBillCategory, sourceType, shopId, warehouseId,warehouseName, targetWarehouseId,
+                                     operateDivisionId,
+                                     purchaserId, purchaserName, product_code)
+
+        # 创建货柜列表
+        containerBill_data = ContainerBill().create_containerbill_link(cookies, stockupbilldata["sourceCode"], sourceBillType, purchaserId,
+                                                                       purchaserName,customsDeclarationSubId)
+
+
+        return containerBill_data
+
+    def shipmentbill_containerBill_link(self, cookies, sourceBillCategory,sourceType, shopId, warehouseId,
+                                  warehouseName, operateDivisionId, purchaserId, purchaserName, targetWarehouseId,
+                                  sourceBillType, customsDeclarationSubId,product_code,quantity, fbaShipmentCode):
+        """
+        创建发货单发货全链路
+        :param isLCL:是否拼柜
+        :param cargoReadyDay:货号日期
+        :param containerId:货柜id
+        :param purchaseOrderId:采购单id
+        :param supplierAccountId:供应商账户id
+        :param purchaseBusinessType:备货 出运 常规
+        :param purchaseBusinessType:备货 出运 常规
+        :param dimensionType: 生成报关合同类型
+        :param customsDeclarationSubId: 报关主体
+        :return:
+        """
+        # 发货单按箱发货-装柜
+        shipmentbilldata=LoadingAdvice().shipmentbill_loadingadvice_link( cookies, sourceBillCategory, sourceType, warehouseId, warehouseName,
+                                        targetWarehouseId, operateDivisionId,
+                                        shopId, purchaserId, purchaserName, product_code, quantity, fbaShipmentCode)
+
+        # 创建货柜列表
+        containerBill_data = ContainerBill().create_containerbill_link(cookies, shipmentbilldata["shipmentBillCode"], sourceBillType, purchaserId,
+                                                                       purchaserName,customsDeclarationSubId)
+
+
+        return containerBill_data
+
+
+
+    def booking_deliverybill_link(self, cookies, sourceBillCategory, shopId, warehouseId,
+                                  warehouseName, operateDivisionId, purchaserId, purchasername, targetWarehouseId,
+                                  sourceBillType, customsDeclarationSubId, product_code):
+        """
+        创建订舱单发货全链路
+        :param isLCL:是否拼柜
+        :param cargoReadyDay:货号日期
+        :param containerId:货柜id
+        :param purchaseOrderId:采购单id
+        :param supplierAccountId:供应商账户id
+        :param purchaseBusinessType:备货 出运 常规
+        :param purchaseBusinessType:备货 出运 常规
+        :param dimensionType: 生成报关合同类型
+        :param customsDeclarationSubId: 报关主体
+        :return:
+        """
+        # 创建订舱单-验货完成
+        booking_data = Inspection().create_inspection_link(cookies, shopId, warehouseId, operateDivisionId, purchaserId,
+                                                           targetWarehouseId, product_code)
+        #装柜
+
+        LoadingAdvice().loadingadvice_link(cookies,  sourceBillCategory, warehouseId, warehouseName,
+                                           booking_data["bookingid"], booking_data["bookingcode"])
+        # 根据订舱单号查询备货单
+        url = f"{waveecharmer_Host}/api/stockupbill/page?stockUpBillStatuses=1,2,3,5,6&sorts=%7B%22field%22:%22id%22,%22order%22:%22desc%22%7D&bookingBillCode={booking_data["bookingcode"]}&pageIndex=1&pageSize=10"
+        sourceCode_resp = StockupBill().query_stockupbill(url, cookies)
+        sourceCode = json.loads(sourceCode_resp.text)["result"]["items"][0]["stockUpBillCode"]
+
+        # 创建货柜列表
+        containerBill_data = ContainerBill().create_containerbill_link(cookies, sourceCode, sourceBillType, purchaserId,
+                                                                       purchasername,customsDeclarationSubId
+                                                                       )
+        return containerBill_data
+
 
 
 if __name__ == '__main__':
     cookies = Login.loginWecharmer()
     # ContainerBill().get_containerbill(cookies, "EGLV143470577152")
     # ContainerBill().create_containerbill_link(cookies,"BH24062000052",502,303,"李朋","3453353534")
-    ContainerBill().booking_deliverybill_link(cookies, 533535, 507, 161, 15, "恒丰仓库", 5, 303, "李朋", 12, 502, 3)
+    # count = 0
+    # while count < 1:
+    #     ContainerBill().booking_deliverybill_link(cookies,507, 161, 15, "恒丰仓库", 5, 303, "李朋", 12, 502, 3,
+    #                                               "A5-181")
+    #     print("这是第 {} 次循环".format(count + 1))
+    #     count += 1
+
+    #订舱单-装柜列表
+    #ContainerBill().booking_deliverybill_link(cookies, 507, 161, 15, "恒丰仓库", 5, 303, "李朋", 12, 502, 3,"A5-181")
+
+    #备货单-按件-货柜列表
+    #ContainerBill().stockupbill_containerBill_link(cookies,502, 2,161, 150, "李朋自营仓", 5, 303, "李朋", 11, 502,3,"A5-181")
+
+    #发货单-按箱-货柜列表
+    ContainerBill().shipmentbill_containerBill_link(cookies,505,1,162, 150, "李朋自营仓",5, 303, "李朋",135,505,3,"A5-181",3, "FBA16M9J26TK")

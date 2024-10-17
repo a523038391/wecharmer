@@ -13,6 +13,8 @@ from conf.baseconfig import waveecharmer_Host
 from lib.login import Login
 from datetime import datetime, timedelta
 
+from lib.productandmaterial.product import Product
+
 
 class ApplyPurchaseBill:
     def __init__(self):
@@ -21,10 +23,12 @@ class ApplyPurchaseBill:
 
         # 创建一个时间差，表示3天
         three_days = timedelta(days=90)
+        three_days_old = timedelta(days=3)
 
         # 将时间差加到当前日期上
         new_date = now + three_days
-        self.formatted_date_old = now.strftime("%Y-%m-%d %H:%M:%S")
+        old_date = now + three_days_old
+        self.formatted_date_old = old_date.strftime("%Y-%m-%d %H:%M:%S")
 
         self.formatted_date = new_date.strftime("%Y-%m-%d %H:%M:%S")
 
@@ -60,7 +64,7 @@ class ApplyPurchaseBill:
         print("送审resp-----------\n" + resp.text)
         return resp
 
-    def create_applypurchasebill_link(self, cookies, shopId, operateDivisionId):
+    def create_applypurchasebill_link(self, cookies, shopId, operateDivisionId,product_code):
         """
         创建常规申购单链路
         :param applyPurchaseType:申购方式
@@ -71,6 +75,29 @@ class ApplyPurchaseBill:
         :param purchaseBusinessType:备货 出运 常规
         :return:
         """
+
+
+        #查询商品信息
+        product_list_payload = {
+            "entityInfoType": 1,
+            "sorts": [
+                {
+                    "field": "code",
+                    "order": "asc"
+                }
+            ],
+            "code": product_code,
+            "pageIndex": 1,
+            "pageSize": 100
+        }
+        product_resp = Product().query_spulist(cookies, product_list_payload)
+        product_result = json.loads(product_resp.text)["result"]["items"][0]["skus"]
+
+
+
+
+
+
         # 创建常规申购单
         applypurchasebill_payload = {
             "shopId": shopId,
@@ -91,30 +118,21 @@ class ApplyPurchaseBill:
         applypurchasebillid = json.loads(applypurchasebill_resp.text)["result"]["id"]
 
         # 创建申购单明细
+        purchaseBillDetails=[]
+        quantity=0
+        for item in product_result:
+            quantity+=100
+            purchaseBillDetails_dict={
+                    "productId": item["productId"],
+                    "skuId": item["id"],
+                    "quantity": quantity
+                }
+            purchaseBillDetails.append(purchaseBillDetails_dict)
+
+
         applypurchasebill_details_payload = {
             "applyPurchaseBillId": applypurchasebillid,
-            "purchaseBillDetails": [
-                {
-                    "productId": 1138,
-                    "skuId": 6355,
-                    "quantity": 100
-                },
-                {
-                    "productId": 1138,
-                    "skuId": 6356,
-                    "quantity": 200
-                },
-                {
-                    "productId": 1138,
-                    "skuId": 6357,
-                    "quantity": 300
-                },
-                {
-                    "productId": 1138,
-                    "skuId": 6358,
-                    "quantity": 400
-                }
-            ]
+            "purchaseBillDetails": purchaseBillDetails
         }
 
         ApplyPurchaseBill().create_applypurchasebill_details(cookies, applypurchasebill_details_payload)
@@ -130,4 +148,4 @@ class ApplyPurchaseBill:
 
 if __name__ == '__main__':
     cookies = Login.loginWecharmer()
-    ApplyPurchaseBill().create_applypurchasebill_link(cookies, 161, 5)
+    ApplyPurchaseBill().create_applypurchasebill_link(cookies, 161, 5,"A5-181")

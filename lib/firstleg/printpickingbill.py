@@ -6,6 +6,8 @@
 # @File : printpickingbill.py
 # @Project : wecharmer
 from conf.baseconfig import waveecharmer_Host
+from lib.firstleg.shipmentbill import ShipmentBill
+from lib.firstleg.stockupbill import StockupBill
 from lib.login import Login
 from util import httpUtil
 
@@ -73,8 +75,37 @@ class Printpickingbill:
 
 
 
+    def shipmentbill_box_print(self,cookies,sourceType,warehouseId, targetWarehouseId, operateDivisionId,
+                                  shopId, purchaserId,purchaserName, product_code, quantity, fbaShipmentCode):
+        #创建发货单按箱
+        shipmentbilldata=ShipmentBill().fba_shipmentbill_box_link( cookies, warehouseId, targetWarehouseId, operateDivisionId,
+                                  shopId, purchaserId, product_code, quantity, fbaShipmentCode)
+
+        #打印
+        Printpickingbill().print_link(cookies,sourceType,shipmentbilldata["shipmentbillid"],shipmentbilldata["shipmentBillCode"],purchaserId,purchaserName)
+        return shipmentbilldata
+
+
+    def stockupbill_print(self,cookies,sourceType, shopId, warehouseId, targetWarehouseId, operateDivisionId,
+                                   purchaserId,purchaserName, product_code):
+        #创建备货单按件
+        stockupbilldata=StockupBill().create_stockupbill_link_v1(cookies, shopId, warehouseId, targetWarehouseId, operateDivisionId,
+                                   purchaserId, product_code)
+        # 打印
+        Printpickingbill().print_link(cookies, sourceType, stockupbilldata["stockUpBillId"],
+                                      stockupbilldata["sourceCode"], purchaserId, purchaserName)
+        return stockupbilldata
+
+
 if __name__ == '__main__':
     cookies = Login.loginWecharmer()
     #Printpickingbill().assign_picker(cookies, 2,725, "BH24062000032", 303, "李朋")
     #Printpickingbill().print_pickingbill(cookies,2,755,"BH24062000033")
-    Printpickingbill().print_link(cookies,2,754,"BH24062000032",303, "李朋")
+    #Printpickingbill().print_link(cookies,2,754,"BH24062000032",303, "李朋")
+    #创建发货单按箱-打印
+    #Printpickingbill().shipmentbill_box_print(cookies,1,150, 135, 5, 162, 303,"李朋",
+    #                                        "A5-181", 3, "FBA16M9J26TK")
+
+    # 创建备货单按件-打印
+
+    Printpickingbill().stockupbill_print(cookies,2,161,150,11,5,303,"李朋","A5-181")

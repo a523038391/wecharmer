@@ -7,9 +7,11 @@
 # @Project : wecharmer
 import json
 import time
+import random
 from datetime import datetime, timedelta
 
 from conf.baseconfig import waveecharmer_Host
+from lib.firstleg.scanpacking import ScanPacking
 from lib.login import Login
 from util import httpUtil
 
@@ -28,7 +30,9 @@ class LoadingAdvice:
         # 如果你只需要年月日，不需要时间部分，可以将其格式化为字符串
         self.formatted_date = new_date.strftime('%Y-%m-%d')
 
-    def create_loadingadvice(self,cookies,billOfLadingCode,sourceBillCategory,warehouseId,warehouseName,sourceBillId):
+        self.random_number = ''.join(str(random.randint(0, 9)) for _ in range(10))
+
+    def create_loadingadvice(self, cookies, sourceBillCategory, warehouseId, warehouseName, sourceBillId):
         """
         创建装柜通知
         :param billOfLadingCode:提单号
@@ -43,7 +47,7 @@ class LoadingAdvice:
         payload = {
             "id": 0,
             "loadingAdviceBillCode": "",
-            "billOfLadingCode": billOfLadingCode,
+            "billOfLadingCode": "lipeng" + self.random_number,
             "loadingAdviceType": 1,
             "sourceBillCategory": sourceBillCategory,
             "expectLoadingTime": self.formatted_date,
@@ -68,7 +72,7 @@ class LoadingAdvice:
         }
 
         resp = httpUtil.HttpUtil.make_http_request(url, "post", payload, cookies)
-        print("创建备货单主表信息resp-----------\n" + resp.text)
+        print("创建装柜单信息resp-----------\n" + resp.text)
         return resp
 
     def query_loadingadvice(self, url, cookies):
@@ -81,7 +85,7 @@ class LoadingAdvice:
         print("查询装柜通知resp-----------\n" + resp.text)
         return resp
 
-    def confirmshipment_loadingadvice(self, cookies,loadingadviceid):
+    def confirmshipment_loadingadvice(self, cookies, loadingadviceid):
         """
         确认发货
         :param loadingadviceid:装柜通知单id
@@ -93,23 +97,53 @@ class LoadingAdvice:
         print("确认发货resp-----------\n" + resp.text)
         return resp
 
-    def loadingadvice_link(self,cookies,billOfLadingCode,sourceBillCategory,warehouseId,warehouseName,sourceBillId,sourceBillCode):
-        #创建装柜通知
-        LoadingAdvice().create_loadingadvice(cookies,billOfLadingCode,sourceBillCategory,warehouseId,warehouseName,sourceBillId)
-        #查询装柜通知
+    def loadingadvice_link(self, cookies, sourceBillCategory, warehouseId, warehouseName, sourceBillId, sourceBillCode):
+        # 创建装柜通知
+        LoadingAdvice().create_loadingadvice(cookies, sourceBillCategory, warehouseId, warehouseName, sourceBillId)
+        # 查询装柜通知
         url = f"{waveecharmer_Host}/api/loadingadvice/page?loadingAdviceBillStatuses=1,2&sorts=%7B%22field%22:%22id%22,%22order%22:%22desc%22%7D&sourceBillCode={sourceBillCode}&billOfLadingCode=&pageIndex=1&pageSize=10"
-        LoadingAdvice_tesp =LoadingAdvice().query_loadingadvice( url, cookies)
-        loadingadviceid=json.loads(LoadingAdvice_tesp.text)["result"]["items"][0]["id"]
+        LoadingAdvice_tesp = LoadingAdvice().query_loadingadvice(url, cookies)
+        loadingadviceid = json.loads(LoadingAdvice_tesp.text)["result"]["items"][0]["id"]
 
         time.sleep(2)
 
-        #确认发货
-        LoadingAdvice().confirmshipment_loadingadvice(cookies,loadingadviceid)
+        # 确认发货
+        LoadingAdvice().confirmshipment_loadingadvice(cookies, loadingadviceid)
+
+    def shipmentbill_loadingadvice_link(self, cookies, sourceBillCategory, sourceType, warehouseId, warehouseName,
+                                        targetWarehouseId, operateDivisionId,
+                                        shopId, purchaserId, purchaserName, product_code, quantity, fbaShipmentCode):
+        # 发货单-按箱-装箱
+        shipmentbilldata = ScanPacking().shipmentbill_scanpacking_link(cookies, sourceType, warehouseId,
+                                                                       targetWarehouseId, operateDivisionId,
+                                                                       shopId, purchaserId, purchaserName, product_code,
+                                                                       quantity, fbaShipmentCode)
+
+        # 装柜
+        LoadingAdvice().loadingadvice_link(cookies, sourceBillCategory, warehouseId, warehouseName,
+                                           shipmentbilldata["shipmentbillid"], shipmentbilldata["shipmentBillCode"])
 
 
+        return shipmentbilldata
+    def stockupbill_loadingadvice_link(self,cookies,sourceBillCategory, sourceType, shopId, warehouseId,warehouseName, targetWarehouseId,
+                                     operateDivisionId,
+                                     purchaserId, purchaserName, product_code):
+        #备货单-按件-装箱
+        stockupbilldata= ScanPacking().stockupbill_scanpacking_link(cookies, sourceType, shopId, warehouseId, targetWarehouseId,
+                                     operateDivisionId,
+                                     purchaserId, purchaserName, product_code)
+        # 装柜
+        LoadingAdvice().loadingadvice_link(cookies, sourceBillCategory, warehouseId, warehouseName,
+                                           stockupbilldata["stockUpBillId"],
+                                           stockupbilldata["sourceCode"])
 
-
-
+        return stockupbilldata
 if __name__ == '__main__':
     cookies = Login.loginWecharmer()
-    LoadingAdvice().loadingadvice_link(cookies,"3242222",507,"150","李朋自营仓",1158,"DC24082800026")
+    # LoadingAdvice().loadingadvice_link(cookies,507,"150","李朋自营仓",1158,"DC24090600036")
+    #发货单按箱发货-装柜
+    #LoadingAdvice().shipmentbill_loadingadvice_link(cookies, 505, 1, 150, "李朋自营仓", 135, 5, 162, 303, "李朋",
+    #                                                "A5-181", 3, "FBA16M9J26TK")
+    #备货单按件发货-装柜
+    LoadingAdvice().stockupbill_loadingadvice_link(cookies, 502, 2, 161, 150, "李朋自营仓", 11, 5, 303, "李朋",
+                                                   "A5-181")

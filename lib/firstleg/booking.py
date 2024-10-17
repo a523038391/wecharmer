@@ -64,6 +64,16 @@ class Booking:
         print("获取订舱单resp-----------\n" + resp.text)
         return resp
 
+    def page_booking(self, cookies, bookingcode):
+        """
+        获取订舱单列表
+        :return:
+        """
+        url = f"{waveecharmer_Host}/api/booking/page?status=4&isLoadingAdviceBillCode=false&isEmptyBookingContainerCode=true&sorts=%7B%22field%22:%22containerNo%22,%22order%22:%22desc%22%7D,%7B%22field%22:%22id%22,%22order%22:%22desc%22%7D&code={bookingcode}&pageIndex=1&pageSize=10"
+        resp = requests.get(url=url, headers=cookies)
+        print("获取订舱单列表resp-----------\n" + resp.text)
+        return resp
+
     def repairshipping_booking(self, cookies, payload):
         """
         补充发货信息
@@ -71,7 +81,7 @@ class Booking:
         """
         url = f"{waveecharmer_Host}/api/booking/repairshipping"
         resp = requests.put(url=url, headers=cookies, json=payload)
-        print("提交resp-----------\n" + resp.text)
+        print("补充发货信息resp-----------\n" + resp.text)
         return resp
 
     def reviewshipping_booking(self, cookies, payload):
@@ -84,7 +94,7 @@ class Booking:
         print("审核resp-----------\n" + resp.text)
         return resp
 
-    def get_bysupplier(self, cookies,bookingid):
+    def get_bysupplier(self, cookies, bookingid):
         """
         获取订舱单分页根据供应商
         :return:
@@ -94,9 +104,7 @@ class Booking:
         print("获取订舱单分页根据供应商resp-----------\n" + resp.text)
         return resp
 
-
-
-    def create_booking_link(self, cookies, shopId, warehouseId, operateDivisionId, purchaserId, targetWarehouseId):
+    def create_booking_link(self, cookies, shopId, warehouseId, operateDivisionId, purchaserId, targetWarehouseId,product_code):
         """
         创建订舱单链路
         :param isLCL:是否拼柜
@@ -111,7 +119,7 @@ class Booking:
 
         # 创建采购单返回id
         purchaseOrderId = PurchaseOrder().create_purchaseorder_link(cookies, shopId, warehouseId, operateDivisionId,
-                                                                    purchaserId)
+                                                                    purchaserId,product_code)
 
         time.sleep(2)
 
@@ -122,7 +130,7 @@ class Booking:
         # 创建订舱单
         booking_payload = {
             "code": "",
-            "cargoReadyDay": self.formatted_date,
+            "cargoReadyDay": "2024-09-28",
             "isLCL": "false",
             "containerId": 4,
             "volume": 3375,
@@ -134,16 +142,16 @@ class Booking:
             "items": [
                 {
                     "id": skuDetailDimensionDetails[0]["id"],
-                    "purchaseOrderId": purchaseOrderId,
+                    "purchaseOrderId": skuDetailDimensionDetails[0]["purchaseOrderId"],
                     "purchaseOrderCode": skuDetailDimensionDetails[0]["purchaseOrderCode"],
                     "productCategoryId": 210,
-                    "productId": 1138,
+                    "productId": 54840,
                     "productCategoryFullName": "摇摇椅>红色摇摇椅",
-                    "productCode": "A5-145",
-                    "productName": "常山仓蜡笔小新A5-145",
-                    "skuCode": "A5-145-A-F",
+                    "productCode": "A5-181",
+                    "productName": "常山仓蜡笔小新A5-181",
+                    "skuCode": "A5-181-A-F",
                     "oldSkuCode": "",
-                    "skuImageUrl": "https://wecharmer-erp-test.obs.cn-east-3.myhuaweicloud.com/ProhibitDeletion/1721974476180_64754b06_24072600405.png",
+                    "skuImageUrl": "https://wecharmer-erp-test.obs.cn-east-3.myhuaweicloud.com/ProhibitDeletion/1725604863983_a405e9c1_24090600259.JPG",
                     "thirdImageUrl": None,
                     "useImageSource": 2,
                     "skuName": "常山仓蜡笔小新-黄色-J",
@@ -156,7 +164,7 @@ class Booking:
                     "exchangeRate": 1,
                     "companyCurrencyType": "CNY",
                     "purchaseOrderDetailDimension": 1,
-                    "applyPurchaseBillId": 4002,
+                    "applyPurchaseBillId": 4208,
                     "bhApplyPurchaseBillId": None,
                     "stockInQuantity": 0,
                     "retrunedQuantity": 0,
@@ -166,8 +174,8 @@ class Booking:
                     "link": "",
                     "createdBy": 303,
                     "createdByName": "李朋",
-                    "createdTime": "2024-08-27T03:02:35.550442+00:00",
-                    "skuId": 6355,
+                    "createdTime": "2024-09-06T06:57:13.019773+00:00",
+                    "skuId": 49532,
                     "quantity": 100,
                     "suite": 6,
                     "overflowRate": 0.05,
@@ -186,8 +194,8 @@ class Booking:
                     "isAllowNegative": True,
                     "supplierList": [
                         {
-                            "id": 11527,
-                            "skuId": 6355,
+                            "id": 12499,
+                            "skuId": 49532,
                             "supplierId": 6,
                             "supplierCode": "GYS00007",
                             "supplierName": "供应商名",
@@ -203,24 +211,6 @@ class Booking:
                             "ctnGrossWeight": 6,
                             "ctnVolume": 0.0002,
                             "isChoose": True
-                        },
-                        {
-                            "id": 11655,
-                            "skuId": 6355,
-                            "supplierId": 6,
-                            "supplierCode": "GYS00007",
-                            "supplierName": "供应商名",
-                            "currency": "CNY",
-                            "price": 44,
-                            "default": False,
-                            "link": None,
-                            "ctnLongX": 44,
-                            "ctnLongY": 44,
-                            "ctnLongZ": 44,
-                            "ctnQuantity": 44,
-                            "ctnNetWeight": 44,
-                            "ctnGrossWeight": 44,
-                            "ctnVolume": 0.085184
                         }
                     ],
                     "ctnGrossWeight": 6,
@@ -230,28 +220,28 @@ class Booking:
                     "ctnLongY": 6,
                     "ctnLongZ": 6,
                     "ctnVolume": 0.0002,
-                    "packageQuantity": 3,
+                    "packageQuantity": 17,
                     "grossWeight": 6,
-                    "productWeight": "108.00",
-                    "ctnGrossWeightAll": "18.00",
-                    "ctnLongXYZ": "0.0006"
+                    "productWeight": "612.00",
+                    "ctnGrossWeightAll": "102.00",
+                    "ctnLongXYZ": "0.0034"
                 },
                 {
                     "id": skuDetailDimensionDetails[1]["id"],
-                    "purchaseOrderId": purchaseOrderId,
-                    "purchaseOrderCode": skuDetailDimensionDetails[0]["purchaseOrderCode"],
+                    "purchaseOrderId": skuDetailDimensionDetails[1]["purchaseOrderId"],
+                    "purchaseOrderCode": skuDetailDimensionDetails[1]["purchaseOrderCode"],
                     "productCategoryId": 210,
-                    "productId": 1138,
+                    "productId": 54840,
                     "productCategoryFullName": "摇摇椅>红色摇摇椅",
-                    "productCode": "A5-145",
-                    "productName": "常山仓蜡笔小新A5-145",
-                    "skuCode": "A5-145-A-L",
+                    "productCode": "A5-181",
+                    "productName": "常山仓蜡笔小新A5-181",
+                    "skuCode": "A5-181-A-L",
                     "oldSkuCode": "",
-                    "skuImageUrl": "https://wecharmer-erp-test.obs.cn-east-3.myhuaweicloud.com/ProhibitDeletion/1721974476180_64754b06_24072600405.png",
-                    "thirdImageUrl": None,
+                    "skuImageUrl": "https://wecharmer-erp-test.obs.cn-east-3.myhuaweicloud.com/ProhibitDeletion/1725604863983_a405e9c1_24090600259.JPG",
+                    "thirdImageUrl": True,
                     "useImageSource": 2,
                     "skuName": "常山仓蜡笔小新-黄色-P",
-                    "tranSku": None,
+                    "tranSku": True,
                     "taxRate": 0.04,
                     "maxQuantity": 212,
                     "putOnQuantity": 0,
@@ -260,8 +250,8 @@ class Booking:
                     "exchangeRate": 1,
                     "companyCurrencyType": "CNY",
                     "purchaseOrderDetailDimension": 1,
-                    "applyPurchaseBillId": 4002,
-                    "bhApplyPurchaseBillId": None,
+                    "applyPurchaseBillId": 4208,
+                    "bhApplyPurchaseBillId": True,
                     "stockInQuantity": 0,
                     "retrunedQuantity": 0,
                     "supplierStockInQuantity": 0,
@@ -270,14 +260,14 @@ class Booking:
                     "link": "",
                     "createdBy": 303,
                     "createdByName": "李朋",
-                    "createdTime": "2024-08-27T03:02:35.550444+00:00",
-                    "skuId": 6356,
+                    "createdTime": "2024-09-06T06:57:13.019775+00:00",
+                    "skuId": 49533,
                     "quantity": 200,
                     "suite": 6,
                     "overflowRate": 0.06,
                     "unitPrice": 6,
-                    "remark": None,
-                    "expectedArrivalTime": None,
+                    "remark": True,
+                    "expectedArrivalTime": True,
                     "cpuQuantity": 212,
                     "operateDivisionName": "运营青蛙椅事业部",
                     "warehouseId": 15,
@@ -289,8 +279,8 @@ class Booking:
                     "isAllowNegative": True,
                     "supplierList": [
                         {
-                            "id": 11528,
-                            "skuId": 6356,
+                            "id": 12500,
+                            "skuId": 49533,
                             "supplierId": 6,
                             "supplierCode": "GYS00007",
                             "supplierName": "供应商名",
@@ -306,24 +296,6 @@ class Booking:
                             "ctnGrossWeight": 6,
                             "ctnVolume": 0.0002,
                             "isChoose": True
-                        },
-                        {
-                            "id": 11654,
-                            "skuId": 6356,
-                            "supplierId": 6,
-                            "supplierCode": "GYS00007",
-                            "supplierName": "供应商名",
-                            "currency": "CNY",
-                            "price": 44,
-                            "default": False,
-                            "link": None,
-                            "ctnLongX": 44,
-                            "ctnLongY": 44,
-                            "ctnLongZ": 44,
-                            "ctnQuantity": 44,
-                            "ctnNetWeight": 44,
-                            "ctnGrossWeight": 44,
-                            "ctnVolume": 0.085184
                         }
                     ],
                     "ctnGrossWeight": 6,
@@ -333,24 +305,24 @@ class Booking:
                     "ctnLongY": 6,
                     "ctnLongZ": 6,
                     "ctnVolume": 0.0002,
-                    "packageQuantity": 4,
+                    "packageQuantity": 35,
                     "grossWeight": 6,
-                    "productWeight": "144.00",
-                    "ctnGrossWeightAll": "24.00",
-                    "ctnLongXYZ": "0.0008"
+                    "productWeight": "1260.00",
+                    "ctnGrossWeightAll": "210.00",
+                    "ctnLongXYZ": "0.0070"
                 },
                 {
                     "id": skuDetailDimensionDetails[2]["id"],
-                    "purchaseOrderId": purchaseOrderId,
-                    "purchaseOrderCode": skuDetailDimensionDetails[0]["purchaseOrderCode"],
+                    "purchaseOrderId": skuDetailDimensionDetails[2]["purchaseOrderId"],
+                    "purchaseOrderCode": skuDetailDimensionDetails[2]["purchaseOrderCode"],
                     "productCategoryId": 210,
-                    "productId": 1138,
+                    "productId": 54840,
                     "productCategoryFullName": "摇摇椅>红色摇摇椅",
-                    "productCode": "A5-145",
-                    "productName": "常山仓蜡笔小新A5-145",
-                    "skuCode": "A5-145-B-F",
+                    "productCode": "A5-181",
+                    "productName": "常山仓蜡笔小新A5-181",
+                    "skuCode": "A5-181-B-F",
                     "oldSkuCode": "",
-                    "skuImageUrl": "https://wecharmer-erp-test.obs.cn-east-3.myhuaweicloud.com/ProhibitDeletion/1721974479008_8f508747_24072600406.jpg",
+                    "skuImageUrl": "https://wecharmer-erp-test.obs.cn-east-3.myhuaweicloud.com/ProhibitDeletion/1725604866221_4f633db4_24090600260.JPG",
                     "thirdImageUrl": None,
                     "useImageSource": 2,
                     "skuName": "常山仓蜡笔小新-绿色-J",
@@ -363,7 +335,7 @@ class Booking:
                     "exchangeRate": 1,
                     "companyCurrencyType": "CNY",
                     "purchaseOrderDetailDimension": 1,
-                    "applyPurchaseBillId": 4002,
+                    "applyPurchaseBillId": 4208,
                     "bhApplyPurchaseBillId": None,
                     "stockInQuantity": 0,
                     "retrunedQuantity": 0,
@@ -373,8 +345,8 @@ class Booking:
                     "link": "",
                     "createdBy": 303,
                     "createdByName": "李朋",
-                    "createdTime": "2024-08-27T03:02:35.550445+00:00",
-                    "skuId": 6357,
+                    "createdTime": "2024-09-06T06:57:13.019775+00:00",
+                    "skuId": 49534,
                     "quantity": 300,
                     "suite": 6,
                     "overflowRate": 0.06,
@@ -392,8 +364,8 @@ class Booking:
                     "isAllowNegative": True,
                     "supplierList": [
                         {
-                            "id": 11529,
-                            "skuId": 6357,
+                            "id": 12501,
+                            "skuId": 49534,
                             "supplierId": 6,
                             "supplierCode": "GYS00007",
                             "supplierName": "供应商名",
@@ -409,24 +381,6 @@ class Booking:
                             "ctnGrossWeight": 6,
                             "ctnVolume": 0.0002,
                             "isChoose": True
-                        },
-                        {
-                            "id": 11658,
-                            "skuId": 6357,
-                            "supplierId": 6,
-                            "supplierCode": "GYS00007",
-                            "supplierName": "供应商名",
-                            "currency": "CNY",
-                            "price": 44,
-                            "default": False,
-                            "link": None,
-                            "ctnLongX": 44,
-                            "ctnLongY": 44,
-                            "ctnLongZ": 44,
-                            "ctnQuantity": 44,
-                            "ctnNetWeight": 44,
-                            "ctnGrossWeight": 44,
-                            "ctnVolume": 0.085184
                         }
                     ],
                     "ctnGrossWeight": 6,
@@ -436,24 +390,24 @@ class Booking:
                     "ctnLongY": 6,
                     "ctnLongZ": 6,
                     "ctnVolume": 0.0002,
-                    "packageQuantity": 5,
+                    "packageQuantity": 53,
                     "grossWeight": 6,
-                    "productWeight": "180.00",
-                    "ctnGrossWeightAll": "30.00",
-                    "ctnLongXYZ": "0.0010"
+                    "productWeight": "1908.00",
+                    "ctnGrossWeightAll": "318.00",
+                    "ctnLongXYZ": "0.0106"
                 },
                 {
                     "id": skuDetailDimensionDetails[3]["id"],
-                    "purchaseOrderId": purchaseOrderId,
-                    "purchaseOrderCode": skuDetailDimensionDetails[0]["purchaseOrderCode"],
+                    "purchaseOrderId": skuDetailDimensionDetails[3]["purchaseOrderId"],
+                    "purchaseOrderCode": skuDetailDimensionDetails[3]["purchaseOrderCode"],
                     "productCategoryId": 210,
-                    "productId": 1138,
+                    "productId": 54840,
                     "productCategoryFullName": "摇摇椅>红色摇摇椅",
-                    "productCode": "A5-145",
-                    "productName": "常山仓蜡笔小新A5-145",
-                    "skuCode": "A5-145-B-L",
+                    "productCode": "A5-181",
+                    "productName": "常山仓蜡笔小新A5-181",
+                    "skuCode": "A5-181-B-L",
                     "oldSkuCode": "",
-                    "skuImageUrl": "https://wecharmer-erp-test.obs.cn-east-3.myhuaweicloud.com/ProhibitDeletion/1721974479008_8f508747_24072600406.jpg",
+                    "skuImageUrl": "https://wecharmer-erp-test.obs.cn-east-3.myhuaweicloud.com/ProhibitDeletion/1725604866221_4f633db4_24090600260.JPG",
                     "thirdImageUrl": None,
                     "useImageSource": 2,
                     "skuName": "常山仓蜡笔小新-绿色-P",
@@ -466,7 +420,7 @@ class Booking:
                     "exchangeRate": 1,
                     "companyCurrencyType": "CNY",
                     "purchaseOrderDetailDimension": 1,
-                    "applyPurchaseBillId": 4002,
+                    "applyPurchaseBillId": 4208,
                     "bhApplyPurchaseBillId": None,
                     "stockInQuantity": 0,
                     "retrunedQuantity": 0,
@@ -476,8 +430,8 @@ class Booking:
                     "link": "",
                     "createdBy": 303,
                     "createdByName": "李朋",
-                    "createdTime": "2024-08-27T03:02:35.550445+00:00",
-                    "skuId": 6358,
+                    "createdTime": "2024-09-06T06:57:13.019776+00:00",
+                    "skuId": 49535,
                     "quantity": 400,
                     "suite": 6,
                     "overflowRate": 0.06,
@@ -495,8 +449,8 @@ class Booking:
                     "isAllowNegative": True,
                     "supplierList": [
                         {
-                            "id": 11530,
-                            "skuId": 6358,
+                            "id": 12502,
+                            "skuId": 49535,
                             "supplierId": 6,
                             "supplierCode": "GYS00007",
                             "supplierName": "供应商名",
@@ -512,24 +466,6 @@ class Booking:
                             "ctnGrossWeight": 6,
                             "ctnVolume": 0.0002,
                             "isChoose": True
-                        },
-                        {
-                            "id": 11657,
-                            "skuId": 6358,
-                            "supplierId": 6,
-                            "supplierCode": "GYS00007",
-                            "supplierName": "供应商名",
-                            "currency": "CNY",
-                            "price": 44,
-                            "default": False,
-                            "link": None,
-                            "ctnLongX": 44,
-                            "ctnLongY": 44,
-                            "ctnLongZ": 44,
-                            "ctnQuantity": 44,
-                            "ctnNetWeight": 44,
-                            "ctnGrossWeight": 44,
-                            "ctnVolume": 0.085184
                         }
                     ],
                     "ctnGrossWeight": 6,
@@ -539,11 +475,11 @@ class Booking:
                     "ctnLongY": 6,
                     "ctnLongZ": 6,
                     "ctnVolume": 0.0002,
-                    "packageQuantity": 6,
+                    "packageQuantity": 70,
                     "grossWeight": 6,
-                    "productWeight": "216.00",
-                    "ctnGrossWeightAll": "36.00",
-                    "ctnLongXYZ": "0.0012"
+                    "productWeight": "2520.00",
+                    "ctnGrossWeightAll": "420.00",
+                    "ctnLongXYZ": "0.0140"
                 }
             ]
         }
@@ -558,6 +494,10 @@ class Booking:
         # 获取订舱单
         Booking_Detail_resp = Booking().get_booking(cookies, bookingid)
         result = json.loads(Booking_Detail_resp.text)["result"]
+
+
+
+
 
         # 补充订舱单发货信息
         repairshipping_payload = {
@@ -583,7 +523,7 @@ class Booking:
                     "shippingOperateDivisionId": operateDivisionId,
                     "locationWarehouseId": targetWarehouseId,
                     "packageSticker": "",
-                    "productSticker": "A5-145-A-F"
+                    "productSticker": skuDetailDimensionDetails[0]["skuCode"]
                 },
                 {
                     "id": 0,
@@ -594,7 +534,7 @@ class Booking:
                     "shippingOperateDivisionId": operateDivisionId,
                     "locationWarehouseId": targetWarehouseId,
                     "packageSticker": "",
-                    "productSticker": "A5-145-A-L"
+                    "productSticker": skuDetailDimensionDetails[1]["skuCode"]
                 },
                 {
                     "id": 0,
@@ -605,7 +545,7 @@ class Booking:
                     "shippingOperateDivisionId": operateDivisionId,
                     "locationWarehouseId": targetWarehouseId,
                     "packageSticker": "",
-                    "productSticker": "A5-145-B-F"
+                    "productSticker": skuDetailDimensionDetails[2]["skuCode"]
                 },
                 {
                     "id": 0,
@@ -616,7 +556,7 @@ class Booking:
                     "shippingOperateDivisionId": operateDivisionId,
                     "locationWarehouseId": targetWarehouseId,
                     "packageSticker": "",
-                    "productSticker": "A5-145-B-L"
+                    "productSticker": skuDetailDimensionDetails[3]["skuCode"]
                 }
             ],
             "fbaItems": []
@@ -629,11 +569,11 @@ class Booking:
             "id": bookingid,
             "isOld": False
         }
-        Booking().reviewshipping_booking(cookies,reviewshipping_payload )
+        Booking().reviewshipping_booking(cookies, reviewshipping_payload)
 
         return bookingid
 
 
 if __name__ == '__main__':
     cookies = Login.loginWecharmer()
-    Booking().create_booking_link(cookies, 161, 15, 5, 303, 11)
+    Booking().create_booking_link(cookies, 161, 15, 5, 303, 11,"A5-181")

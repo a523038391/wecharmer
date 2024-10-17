@@ -106,7 +106,7 @@ class Inspection:
 
 
 
-    def create_inspection_link(self, cookies, shopId, warehouseId, operateDivisionId, purchaserId, targetWarehouseId):
+    def create_inspection_link(self, cookies, shopId, warehouseId, operateDivisionId, purchaserId, targetWarehouseId,product_code):
         """
         创建验货申请链路
         :param requireType:收货类型
@@ -121,7 +121,7 @@ class Inspection:
         """
         # 创建订舱通知返回id
         bookingid = Booking().create_booking_link(cookies, shopId, warehouseId, operateDivisionId, purchaserId,
-                                                  targetWarehouseId)
+                                                  targetWarehouseId,product_code)
 
         # 获取订舱单明细
         Booking_Detail_resp = Booking().get_booking(cookies, bookingid)
@@ -147,19 +147,19 @@ class Inspection:
             "items": [
                 {
                     "purchaseOrderId": Booking_Detail_result["items"][0]["purchaseOrderId"],
-                    "skuId": 6355
+                    "skuId": Booking_Detail_result["items"][0]["skuId"]
                 },
                 {
                     "purchaseOrderId": Booking_Detail_result["items"][0]["purchaseOrderId"],
-                    "skuId": 6356
+                    "skuId": Booking_Detail_result["items"][1]["skuId"]
                 },
                 {
                     "purchaseOrderId": Booking_Detail_result["items"][0]["purchaseOrderId"],
-                    "skuId": 6357
+                    "skuId": Booking_Detail_result["items"][2]["skuId"]
                 },
                 {
                     "purchaseOrderId": Booking_Detail_result["items"][0]["purchaseOrderId"],
-                    "skuId": 6358
+                    "skuId": Booking_Detail_result["items"][3]["skuId"]
                 }
             ]
         }
@@ -293,4 +293,4 @@ class Inspection:
 
 if __name__ == '__main__':
     cookies = Login.loginWecharmer()
-    Inspection().create_inspection_link(cookies, 161, 15, 5, 303, 12)
+    Inspection().create_inspection_link(cookies, 161, 15, 5, 303, 12,"A5-181")

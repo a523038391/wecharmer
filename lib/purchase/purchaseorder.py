@@ -16,6 +16,7 @@ from conf.baseconfig import waveecharmer_Host
 from lib.login import Login
 from datetime import datetime, timedelta
 
+from lib.productandmaterial.product import Product
 from lib.purchase.applypurchasebill import ApplyPurchaseBill
 
 
@@ -32,8 +33,7 @@ class PurchaseOrder:
 
         self.formatted_date = new_date.strftime("%Y-%m-%d %H:%M:%S")
 
-
-    def get_purchaseorder_details(self,cookies,purchaseorderid):
+    def get_purchaseorder_details(self, cookies, purchaseorderid):
         """
         根据id获取采购单明细
         :return:
@@ -42,7 +42,6 @@ class PurchaseOrder:
         resp = requests.get(url=url, headers=cookies)
         print("获取采购单明细resp-----------\n" + resp.text)
         return resp
-
 
     def create_purchaseorder(self, cookies, payload):
         """
@@ -64,8 +63,6 @@ class PurchaseOrder:
         print("创建采购单明细resp-----------\n" + resp.text)
         return resp
 
-
-
     def purchaseorder_review(self, purchaseorderid, cookies, payload):
         """
         送审
@@ -76,8 +73,7 @@ class PurchaseOrder:
         print("送审resp-----------\n" + resp.text)
         return resp
 
-
-    def get_purchaseorder(self,cookies, purchaseorderid):
+    def get_purchaseorder(self, cookies, purchaseorderid):
         """
         根据id获取采购单明细
         :return:
@@ -87,8 +83,7 @@ class PurchaseOrder:
         print("获取采购单明细resp-----------\n" + resp.text)
         return resp
 
-
-    def create_purchaseorder_link(self, cookies, shopId, warehouseId, operateDivisionId, purchaserId):
+    def create_purchaseorder_link(self, cookies, shopId, warehouseId, operateDivisionId, purchaserId, product_code):
         """
         创建采购单链路
         :param companyId:财务公司抬头id
@@ -101,7 +96,8 @@ class PurchaseOrder:
         """
 
         # 创建备货单返回id
-        applypurchasebillid = ApplyPurchaseBill().create_applypurchasebill_link(cookies, shopId, operateDivisionId)
+        applypurchasebillid = ApplyPurchaseBill().create_applypurchasebill_link(cookies, shopId, operateDivisionId,
+                                                                                product_code)
 
         time.sleep(2)
 
@@ -153,50 +149,50 @@ class PurchaseOrder:
         print(purchaseorder_resp)
         purchaseorderid = json.loads(purchaseorder_resp.text)["result"]["id"]
 
+        # 查询商品信息
+        product_list_payload = {
+            "entityInfoType": 1,
+            "sorts": [
+                {
+                    "field": "code",
+                    "order": "asc"
+                }
+            ],
+            "code": product_code,
+            "pageIndex": 1,
+            "pageSize": 100
+        }
+        product_resp = Product().query_spulist(cookies, product_list_payload)
+        product_result = json.loads(product_resp.text)["result"]["items"][0]["skus"]
+
         # 创建采购单明细
-        purchaseorder_details_payload = {
-            "purchaseOrderId": purchaseorderid,
-            "purchaseOrderDetails": [
-                {
-                    "skuId": 6355,
-                    "quantity": 100,
+        purchaseOrderDetails=[]
+        quantity=0
+        unitPrice=100
+        for item in product_result:
+            quantity+=100
+            unitPrice+=50
+            purchaseOrderDetails_dict={
+                    "skuId": item["id"],
+                    "quantity": quantity,
                     "overflowRate": 0.05,
-                    "unitPrice": 6,
-                    "taxRate": 0.04
-                },
-                {
-                    "skuId": 6356,
-                    "quantity": 200,
-                    "overflowRate": 0.06,
-                    "unitPrice": 6,
-                    "taxRate": 0.04
-                },
-                {
-                    "skuId": 6357,
-                    "quantity": 300,
-                    "overflowRate": 0.06,
-                    "unitPrice": 6,
-                    "taxRate": 0.04
-                },
-                {
-                    "skuId": 6358,
-                    "quantity": 400,
-                    "overflowRate": 0.06,
-                    "unitPrice": 6,
+                    "unitPrice": unitPrice,
                     "taxRate": 0.04
                 }
-            ]
+            purchaseOrderDetails.append(purchaseOrderDetails_dict)
+        purchaseorder_details_payload = {
+            "purchaseOrderId": purchaseorderid,
+            "purchaseOrderDetails": purchaseOrderDetails
         }
         PurchaseOrder().create_purchaseorder_details(cookies, purchaseorder_details_payload)
 
-        #送审
+        # 送审
         payload = {}
-        PurchaseOrder().purchaseorder_review(purchaseorderid,cookies,payload)
+        PurchaseOrder().purchaseorder_review(purchaseorderid, cookies, payload)
 
         return purchaseorderid
 
 
-
 if __name__ == '__main__':
     cookies = Login.loginWecharmer()
-    PurchaseOrder().create_purchaseorder_link(cookies, 161, 15, 5, 303)
+    PurchaseOrder().create_purchaseorder_link(cookies, 161, 150, 5, 303, "A5-181")

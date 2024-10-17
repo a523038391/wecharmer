@@ -54,8 +54,7 @@ class DeliveryBill:
         sourceCode_resp=StockupBill().query_stockupbill(cookies,url)
         sourceCode=json.loads(sourceCode_resp.text)["result"]["items"][0]["stockUpBillCode"]
 
-        #创建货柜列表
-        ContainerBill().create_containerbill_link(cookies,sourceCode,sourceBillType,purchaserId,purchasername,billOfLadingCode)
+
 
 
 if __name__ == '__main__':
