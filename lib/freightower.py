@@ -282,6 +282,6 @@ class Freightower:
 if __name__ == '__main__':
     cookies = Login.loginFreightower()
     # Freightower().container_match(cookies,"EGLV143470577152")
-    Freightower().freightower_link(cookies, "EGLV143470637812", "CNNGB")
+    Freightower().freightower_link(cookies, "OOLU2152959720", "CNNGB")
     # Freightower().get_port_subscribe(cookies,342478679633305600)
 

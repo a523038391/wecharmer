@@ -134,6 +134,16 @@ class StockupBill:
         print("备货单分配库存按件resp-----------\n" + resp.text)
         return resp
 
+    def update_share_stockupbill_box(self, cookies, payload):
+        """
+        分配库存按箱
+        :return:
+        """
+        url = f"{waveecharmer_Host}/api/stockupbill/box/share/update"
+        resp = requests.put(url=url, headers=cookies, json=payload)
+        print("分配库存按箱resp-----------\n" + resp.text)
+        return resp
+
     def update_share_stockupbill(self, cookies, stockUpBillId, id, skuId, plannedShipmentQuantity):
         """
         备货单分配库存按件
@@ -224,6 +234,116 @@ class StockupBill:
         stockupbilldata = {"skucode": skucode, "stockUpBillId": int(stockUpBillId), "sourceCode": sourceCode}
         print(stockupbilldata)
         return stockupbilldata
+
+    def create_stockupbill_box_link(self, cookies, shopId, warehouseId, targetWarehouseId, operateDivisionId,
+                                    purchaserId, product_code, quantity):
+        """
+        创建备货单链路-按箱
+        :param shopId:商品id
+        :param warehouseId:出发仓
+        :param targetWarehouseId:目的仓
+        :param operateDivisionId:运营事业部id
+        :param platformEnName:平台名称
+        :param shipmentType:0 按件 1按箱
+        :return:
+        """
+
+        # 创建采购单按箱上架
+        Stock().purchase_order_box_link(cookies, shopId, warehouseId, operateDivisionId, purchaserId, product_code)
+
+        # 创建备货单
+        stockupbill_payload = {
+            "stockUpBillCode": "",
+            "sendOutGoodsType": 1,
+            "shopId": shopId,
+            "isFNSKU": False,
+            "warehouseId": warehouseId,
+            "targetWarehouseId": targetWarehouseId,
+            "expectedDeliveryTime": self.formatted_date,
+            "platformName": "抖音",
+            "shippingAddress": "617 E Sunkist St",
+            "attachmentDetail": [],
+            "remark": "",
+            "operateDivisionId": operateDivisionId,
+            "shipmentType": 1,
+            "stockUpType": 1,
+            "platformEnName": "Tiktok"
+        }
+
+        stockupbill_resp = StockupBill().create_stockupbill_v1(cookies, stockupbill_payload)
+        stockUpBillId = json.loads(stockupbill_resp.text)["result"]
+
+        # 获取装箱库存明细平铺箱贴聚合数据分页
+
+        packingstock_spread_page_resp = Stock().get_packingstock_spread_page(cookies, shopId, operateDivisionId,
+                                                                             product_code)
+        packingstock_spread_page_result = json.loads(packingstock_spread_page_resp.text)["result"]
+        stockUpBillDetail = []
+        boxes = []
+        skuid = []
+        allocate_items = []
+        count = 1
+
+        for item in packingstock_spread_page_result["items"]:
+            if int(item["boxStickerNo"][-1]) <= int(item["availableStockQuantity"]) and item["skuId"] not in skuid:
+                stockUpBillDetail_dict = {
+                    "skuId": item["skuId"],
+                    "plannedShipmentQuantity": quantity * int(item["boxStickerNo"][-1]),
+                    "skuImageUrl": item["skuImageUrl"],
+                    "thirdImageUrl": item["thirdImageUrl"],
+                    "useImageSource": item["useImageSource"],
+                    "skuCode": item["skuCode"],
+                    "oldSkuCode": item["oldSkuCode"],
+                    "asinCode": None,
+                    "fnSku": None,
+                    "lisitingTitle": None
+                }
+                boxes_dict = {
+                    "boxStickerNo": item["boxStickerNo"],
+                    "quantity": quantity
+                }
+
+                allocate_dict = {
+                    "id": item["id"],
+                    "boxStickerNo": item["boxStickerNo"],
+                    "skuId": item["skuId"],
+                    "plannedShipmentQuantity": quantity * int(item["boxStickerNo"][-1]),
+                    "warehouseLocationIds": []
+                }
+                skuid.append(item["skuId"])
+                stockUpBillDetail.append(stockUpBillDetail_dict)
+                boxes.append(boxes_dict)
+                allocate_items.append(allocate_dict)
+                count += 1
+                if count == 5:
+                    break
+            else:
+                continue
+        print(stockUpBillDetail)
+
+        # 创建备货单明细
+        stockupbill_detail_payload = {
+            "stockUpBillId": stockUpBillId,
+            "stockUpBillDetail": stockUpBillDetail,
+            "boxes": boxes
+        }
+        StockupBill().create_stockupbill_detail_v1(cookies, stockupbill_detail_payload)
+
+        # 分配库存
+
+        stockupbill_allocate_payload = {
+            "id": stockUpBillId,
+            "items": allocate_items
+        }
+        StockupBill().update_share_stockupbill_box(cookies,stockupbill_allocate_payload)
+
+        # 通过备货单id获取详情信息
+        stockupbill_detail_resp = StockupBill().get_stockupbill_detail(cookies, stockUpBillId)
+        sourceCode = json.loads(stockupbill_detail_resp.text)["result"]["stockUpBillCode"]
+        stockupbilldata = {"stockUpBillId": int(stockUpBillId), "sourceCode": sourceCode}
+
+        return stockupbilldata
+
 
     def create_stockupbill_link_v1(self, cookies, shopId, warehouseId, targetWarehouseId, operateDivisionId,
                                    purchaserId, product_code):
@@ -332,6 +452,8 @@ class StockupBill:
             }
             update_share_items.append(update_share_dict)
 
+        print(update_share_items)
+
         update_share_stockupbill_payload = {
             "id": stockUpBillId,
             "items": update_share_items
@@ -341,10 +463,9 @@ class StockupBill:
         # 通过备货单id获取详情信息
         stockupbill_detail_resp = StockupBill().get_stockupbill_detail(cookies, stockUpBillId)
         sourceCode = json.loads(stockupbill_detail_resp.text)["result"]["stockUpBillCode"]
-        stockupbilldata = { "stockUpBillId": int(stockUpBillId), "sourceCode": sourceCode}
+        stockupbilldata = {"stockUpBillId": int(stockUpBillId), "sourceCode": sourceCode}
 
         return stockupbilldata
-
 
 
 if __name__ == '__main__':
@@ -352,5 +473,11 @@ if __name__ == '__main__':
     # StockupBill().create_stockupbill_link(cookies, "LIPENG456-B-P", 161, 150, 11, 5, "Tiktok")
     # StockupBill().create_stockupbill(cookies, 161, 150, 11, 5, "Tiktok")
 
-    #按件创建备货单
+    # 按件创建备货单
     StockupBill().create_stockupbill_link_v1(cookies, 161, 150, 11, 5, 303, "A5-181")
+
+
+    #按箱创建备货单
+    #StockupBill().create_stockupbill_box_link(cookies, 161, 150, 11, 5, 303, "A5-181",3)
+
+

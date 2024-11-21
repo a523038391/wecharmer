@@ -189,6 +189,43 @@ class ScanPacking:
 
         return shipmentbilldata
 
+
+    def stockupbill_scanpacking_box_link(self, cookies, sourceType, shopId, warehouseId, targetWarehouseId,
+                                     operateDivisionId,
+                                     purchaserId, purchaserName, product_code,quantity):
+
+        # 创建备货单-按箱-打印
+        stockupbilldata=Printpickingbill().stockupbill_box_print(cookies, sourceType, shopId, warehouseId, targetWarehouseId,
+                                     operateDivisionId,
+                                     purchaserId, purchaserName, product_code,quantity)
+
+        # 扫描单号并茨取单据信息
+        scan_billcode_resp = ScanPacking().scan_billcode(cookies, stockupbilldata["sourceCode"])
+        scan_billcode_result = json.loads(scan_billcode_resp.text)["result"]
+
+        # 装箱
+
+        for item in scan_billcode_result["packingStockList"]:
+            packingbybox_payload = {
+                "sourceType": sourceType,
+                "sourceId": stockupbilldata["stockUpBillId"],
+                "sourceCode": stockupbilldata["sourceCode"],
+                "packingStockModel": item
+            }
+            ScanPacking().scanpacking_packingbybox(cookies, packingbybox_payload)
+
+        # 提交装箱审核
+        ScanPacking().submit_scanpacking(cookies, sourceType, stockupbilldata["stockUpBillId"],
+                                                                  stockupbilldata["sourceCode"])
+
+        # 装箱审核
+        ScanPacking().process_scanpacking(cookies, sourceType, stockupbilldata["stockUpBillId"],
+                                                                  stockupbilldata["sourceCode"])
+
+        return stockupbilldata
+
+
+
     def stockupbill_scanpacking_link(self, cookies, sourceType, shopId, warehouseId, targetWarehouseId,
                                      operateDivisionId,
                                      purchaserId, purchaserName, product_code):
@@ -202,8 +239,6 @@ class ScanPacking:
         all_productcode_resp = ScanPacking().scan_all_productcode(cookies, sourceType, stockupbilldata["stockUpBillId"],
                                                                   stockupbilldata["sourceCode"])
         all_productcode_result = json.loads(all_productcode_resp.text)["result"]
-
-
 
         # 装箱
         detailList = []
@@ -243,12 +278,71 @@ class ScanPacking:
         return stockupbilldata
 
 
+    def shipmentbill_scanpacking_a_link(self,cookies,sourceType, warehouseId, targetWarehouseId, operateDivisionId,
+                                  shopId, purchaserId,purchaserName, product_code, fbaShipmentCode):
+
+
+        # 创建发货单-按件-打印
+        shipmentbilldata=Printpickingbill().shipmentbill_print(cookies,sourceType, warehouseId, targetWarehouseId, operateDivisionId,
+                                  shopId, purchaserId,purchaserName, product_code, fbaShipmentCode)
+
+        # 获取所有产品装箱信息
+        all_productcode_resp = ScanPacking().scan_all_productcode(cookies, sourceType, shipmentbilldata["shipmentbillid"],
+                                                                  shipmentbilldata["shipmentBillCode"])
+        all_productcode_result = json.loads(all_productcode_resp.text)["result"]
+
+        # 装箱
+        detailList = []
+        for item in all_productcode_result:
+            detailList_dict = {
+                "skuImgUrl": item["skuImgUrl"],
+                "thirdImageUrl": None,
+                "useImageSource": item["useImageSource"],
+                "skuId": item["skuId"],
+                "skuCode": item["skuCode"],
+                "oldSkuCode": item["oldSkuCode"],
+                "skuName": item["skuName"],
+                "fnSkuCode": None,
+                "packingQuantity": item["remainingQuantity"],
+                "remainingQuantity": item["remainingQuantity"],
+                "grossWeight": item["grossWeight"],
+                "remainingQuantityCpu": 0,
+                "transQtyValid": False
+            }
+            detailList.append(detailList_dict)
+        packing_scanpacking_payload = {
+            "billCode": shipmentbilldata["shipmentBillCode"],
+            "boxId": 1,
+            "totalWeightWithBox": 20,
+            "detailList": detailList
+        }
+        ScanPacking().packing_scanpacking_v1(cookies, packing_scanpacking_payload)
+
+        # 提交装箱审核
+        ScanPacking().submit_scanpacking(cookies, sourceType, shipmentbilldata["shipmentbillid"],
+                                                                  shipmentbilldata["shipmentBillCode"])
+
+        # 装箱审核
+        ScanPacking().process_scanpacking(cookies, sourceType, shipmentbilldata["shipmentbillid"],
+                                                                  shipmentbilldata["shipmentBillCode"])
+
+        return shipmentbilldata
+
 if __name__ == '__main__':
     cookies = Login.loginWecharmer()
     # ScanPacking().scan_billcode(cookies, "BH24061900005")
     # ScanPacking().packing_scanpacking(cookies, 1, "724", "BH24061900004", "LIPENG456-B-P")
     #发货单按箱装箱-审核
-    #ScanPacking().shipmentbill_scanpacking_link(cookies, 1, 150, 135, 5, 162, 303, "李朋",
-    #                                           "A5-181", 3, "FBA16M9J26TK")
+    # ScanPacking().shipmentbill_scanpacking_link(cookies, 1, 128, 135, 5, 162, 303, "李朋",
+    #     #                                            "A5-181", 3, "FBA16M9J26TK")
     #备货单按件装箱-审核
-    ScanPacking().stockupbill_scanpacking_link(cookies,2,161,150,11,5,303,"李朋","A5-181")
+    ScanPacking().stockupbill_scanpacking_link(cookies,2,161,177,11,5,303,"李朋","A5-181")
+
+
+    #备货单按箱装箱-审核
+    ScanPacking().stockupbill_scanpacking_box_link(cookies,2,161,177,11,5,303,"李朋","A5-181",3)
+
+
+    #备货单按件装箱-审核
+    #ScanPacking().shipmentbill_scanpacking_a_link(cookies, 1, 150, 135, 5, 162, 303, "李朋",
+    #                                            "A5-181", "FBA16M9J26TK")

@@ -59,7 +59,6 @@ class Inspection:
         print("指派验货员resp-----------\n" + resp.text)
         return resp
 
-
     def get_inspection_items(self, cookies, inspectionid):
         """
         查询验货单详情
@@ -70,8 +69,6 @@ class Inspection:
         print("查询验货单详情resp-----------\n" + resp.text)
         return resp
 
-
-
     def get_inspection_list(self, cookies, bookingcode):
         """
         查询验货单列表
@@ -81,7 +78,6 @@ class Inspection:
         resp = requests.get(url=url, headers=cookies)
         print("查询验货单列表resp-----------\n" + resp.text)
         return resp
-
 
     def create_inspection_report(self, cookies, payload):
         """
@@ -103,12 +99,9 @@ class Inspection:
         print("送审resp-----------\n" + resp.text)
         return resp
 
-
-
-
-    def create_inspection_link(self, cookies, shopId, warehouseId, operateDivisionId, purchaserId, targetWarehouseId,product_code):
+    def inspection_report(self, cookies, bookingid, purchaserId):
         """
-        创建验货申请链路
+        创建验货申请报告链路
         :param requireType:收货类型
         :param requireDate:验货日期
         :param containerId:货柜id
@@ -119,20 +112,25 @@ class Inspection:
         :param inspectionWay:免检
         :return:
         """
-        # 创建订舱通知返回id
-        bookingid = Booking().create_booking_link(cookies, shopId, warehouseId, operateDivisionId, purchaserId,
-                                                  targetWarehouseId,product_code)
 
         # 获取订舱单明细
         Booking_Detail_resp = Booking().get_booking(cookies, bookingid)
         Booking_Detail_result = json.loads(Booking_Detail_resp.text)["result"]
-        bookingcode=Booking_Detail_result["code"]
+        bookingcode = Booking_Detail_result["code"]
 
         # 获取订舱单分页根据供应商
         bysupplier_resp = Booking().get_bysupplier(cookies, bookingid)
         bysupplier_result = json.loads(bysupplier_resp.text)["result"]
 
         # 创建验货申请
+        items = []
+        for Detail in Booking_Detail_result["items"]:
+            item_dict = {
+                "purchaseOrderId": Detail["purchaseOrderId"],
+                "skuId": Detail["skuId"]
+            }
+            items.append(item_dict)
+
         inspection_payload = {
             "code": "",
             "name": "",
@@ -144,24 +142,7 @@ class Inspection:
             "bookingBillCode": Booking_Detail_result["code"],
             "attachments": [],
             "sourceType": 2,
-            "items": [
-                {
-                    "purchaseOrderId": Booking_Detail_result["items"][0]["purchaseOrderId"],
-                    "skuId": Booking_Detail_result["items"][0]["skuId"]
-                },
-                {
-                    "purchaseOrderId": Booking_Detail_result["items"][0]["purchaseOrderId"],
-                    "skuId": Booking_Detail_result["items"][1]["skuId"]
-                },
-                {
-                    "purchaseOrderId": Booking_Detail_result["items"][0]["purchaseOrderId"],
-                    "skuId": Booking_Detail_result["items"][2]["skuId"]
-                },
-                {
-                    "purchaseOrderId": Booking_Detail_result["items"][0]["purchaseOrderId"],
-                    "skuId": Booking_Detail_result["items"][3]["skuId"]
-                }
-            ]
+            "items": items
         }
 
         inspection_resp = Inspection().create_inspection(cookies, inspection_payload)
@@ -173,16 +154,44 @@ class Inspection:
         # 指派验货员
         Inspection().inspection_assign(cookies, inspectionid, purchaserId)
 
-        #查询验货申请单详情
+        # 查询验货申请单详情
         inspection_items_resp = Inspection().get_inspection_items(cookies, inspectionid)
-        inspection_items_result=json.loads(inspection_items_resp.text)["result"]
+        inspection_items_result = json.loads(inspection_items_resp.text)["result"]
 
-        #查询验货单列表
-        inspection_list_resp=Inspection().get_inspection_list(cookies, bookingcode)
-        inspection_list_result=json.loads(inspection_list_resp.text)["result"]
-
+        # 查询验货单列表
+        inspection_list_resp = Inspection().get_inspection_list(cookies, bookingcode)
+        inspection_list_result = json.loads(inspection_list_resp.text)["result"]
+        # 查询订舱单详情
+        get_booking_resp = Booking().get_booking(cookies, bookingid)
+        get_booking_result = json.loads(get_booking_resp.text)["result"]
 
         # 创建验货报告
+        requireItemIdObj = {}
+        packagedStockItems = []
+        boxSizeItems = []
+        for item, booking in zip(inspection_items_result, get_booking_result["items"]):
+            requireItemIdObj[f"{item["purchaseOrderCode"]}-{item["skuCode"]}"] = item["id"]
+            packagedStockItem_dict = {
+                "purchaseOrderId": item["purchaseOrderId"],
+                "skuId": item["skuId"],
+                "packagedQuantity": item["requireQuantity"]
+            }
+
+            boxSizeItem_dict = {
+                "requireItemId": item["id"],
+                "ctnLongX": booking["ctnLongX"],
+                "ctnLongY": booking["ctnLongY"],
+                "ctnLongZ": booking["ctnLongZ"],
+                "ctnVolume": booking["ctnVolume"],
+                "ctnNetWeight": booking["ctnNetWeight"],
+                "totalCtnVolume": booking["totalCtnVolume"],
+                "ctnGrossWeight": booking["ctnGrossWeight"],
+                "totalCtnGrossWeight": booking["totalCtnGrossWeight"],
+                "totalGrossWeight": booking["totalGrossWeight"]
+            }
+            packagedStockItems.append(packagedStockItem_dict)
+            boxSizeItems.append(boxSizeItem_dict)
+
         inspection_report_payload = {
             "code": "",
             "supplierName": inspection_list_result["items"][0]["supplierName"],
@@ -196,101 +205,82 @@ class Inspection:
             "conclusion": 1,
             "remark": None,
             "attachments": [],
-            "requireItemIdObj": {
-                f"{inspection_items_result[0]["purchaseOrderCode"]}-{inspection_items_result[0]["skuCode"]}": inspection_items_result[0]["id"],
-                f"{inspection_items_result[1]["purchaseOrderCode"]}-{inspection_items_result[1]["skuCode"]}": inspection_items_result[1]["id"],
-                f"{inspection_items_result[2]["purchaseOrderCode"]}-{inspection_items_result[2]["skuCode"]}": inspection_items_result[2]["id"],
-                f"{inspection_items_result[3]["purchaseOrderCode"]}-{inspection_items_result[3]["skuCode"]}": inspection_items_result[3]["id"]
-            },
+            "requireItemIdObj": requireItemIdObj,
             "item": {
                 "inspectionWay": 1,
                 "qualifiedQuantity": None,
                 "defectQuantity": None
             },
-            "packagedStockItems": [
-                {
-                    "purchaseOrderId": inspection_items_result[0]["purchaseOrderId"],
-                    "skuId": inspection_items_result[0]["skuId"],
-                    "packagedQuantity": 18
-                },
-                {
-                    "purchaseOrderId": inspection_items_result[1]["purchaseOrderId"],
-                    "skuId": inspection_items_result[1]["skuId"],
-                    "packagedQuantity": 24
-                },
-                {
-                    "purchaseOrderId": inspection_items_result[2]["purchaseOrderId"],
-                    "skuId": inspection_items_result[2]["skuId"],
-                    "packagedQuantity": 30
-                },
-                {
-                    "purchaseOrderId": inspection_items_result[3]["purchaseOrderId"],
-                    "skuId": inspection_items_result[3]["skuId"],
-                    "packagedQuantity": 36
-                }
-            ],
-            "boxSizeItems": [
-                {
-                    "requireItemId": inspection_items_result[0]["id"],
-                    "ctnLongX": 6,
-                    "ctnLongY": 6,
-                    "ctnLongZ": 6,
-                    "ctnVolume": 0.0002,
-                    "ctnNetWeight": 6,
-                    "totalCtnVolume": 0.0006,
-                    "ctnGrossWeight": 6,
-                    "totalCtnGrossWeight": 18,
-                    "totalGrossWeight": 108
-                },
-                {
-                    "requireItemId": inspection_items_result[1]["id"],
-                    "ctnLongX": 6,
-                    "ctnLongY": 6,
-                    "ctnLongZ": 6,
-                    "ctnVolume": 0.0002,
-                    "ctnNetWeight": 6,
-                    "totalCtnVolume": 0.0008,
-                    "ctnGrossWeight": 6,
-                    "totalCtnGrossWeight": 24,
-                    "totalGrossWeight": 144
-                },
-                {
-                    "requireItemId": inspection_items_result[2]["id"],
-                    "ctnLongX": 6,
-                    "ctnLongY": 6,
-                    "ctnLongZ": 6,
-                    "ctnVolume": 0.0002,
-                    "ctnNetWeight": 6,
-                    "totalCtnVolume": 0.001,
-                    "ctnGrossWeight": 6,
-                    "totalCtnGrossWeight": 30,
-                    "totalGrossWeight": 180
-                },
-                {
-                    "requireItemId": inspection_items_result[3]["id"],
-                    "ctnLongX": 6,
-                    "ctnLongY": 6,
-                    "ctnLongZ": 6,
-                    "ctnVolume": 0.0002,
-                    "ctnNetWeight": 6,
-                    "totalCtnVolume": 0.0012,
-                    "ctnGrossWeight": 6,
-                    "totalCtnGrossWeight": 36,
-                    "totalGrossWeight": 216
-                }
-            ]
+            "packagedStockItems": packagedStockItems,
+            "boxSizeItems": boxSizeItems
         }
-        inspection_report_resp =  Inspection().create_inspection_report(cookies,inspection_report_payload)
-        inspection_report_id=json.loads(inspection_report_resp.text)["result"]
+        inspection_report_resp = Inspection().create_inspection_report(cookies, inspection_report_payload)
+        inspection_report_id = json.loads(inspection_report_resp.text)["result"]
 
-        #送审
-        Inspection().inspection_askapprove(cookies,inspection_report_id)
+        # 送审
+        Inspection().inspection_askapprove(cookies, inspection_report_id)
 
-        booking_data={"bookingid":bookingid,"bookingcode":bookingcode}
+        booking_data = {"bookingid": bookingid, "bookingcode": bookingcode}
 
         return booking_data
+
+    def create_inspection_link(self, cookies, shopId, warehouseId, operateDivisionId, purchaserId, targetWarehouseId,
+                               product_code):
+
+        # 创建订舱通知返回id
+        bookingid = Booking().create_booking_link(cookies, shopId, warehouseId, operateDivisionId, purchaserId,
+                                                  targetWarehouseId, product_code)
+
+        #生成验货报告
+
+        booking_data = Inspection().inspection_report(cookies, bookingid, purchaserId)
+
+        return booking_data
+
+    def create_fba_inspection_link(self,cookies, shopId, warehouseId, operateDivisionId, purchaserId,
+                                purchasername, product_code, fbaShipmentCode):
+
+        #创建预定舱返回id
+
+
+        bookingids = Booking().create_fba_booking_link(cookies, shopId, warehouseId, operateDivisionId, purchaserId,
+                                purchasername, product_code, fbaShipmentCode)
+
+
+        #生成验货吧报告
+        booking_data = Inspection().inspection_report(cookies, bookingids[0], purchaserId)
+
+
+
+        return booking_data
+
+    def create_fba_inspection_booking_link(self,cookies, shopId, warehouseId, operateDivisionId, purchaserId,
+                                purchasername, product_code, fbaShipmentCode):
+
+        #预定舱-生成验货报告
+        booking_data=Inspection().create_fba_inspection_link(cookies, shopId, warehouseId, operateDivisionId, purchaserId,
+                                purchasername, product_code, fbaShipmentCode)
+
+        #预定舱-生成订舱通知
+        bookingid_from_fba=Booking().create_booking_from_fba_link(cookies,booking_data["bookingid"])
+
+
+        return bookingid_from_fba
+
+
+
 
 
 if __name__ == '__main__':
     cookies = Login.loginWecharmer()
-    Inspection().create_inspection_link(cookies, 161, 15, 5, 303, 12,"A5-181")
+
+    #订舱单尾期验货
+    Inspection().create_inspection_link(cookies, 161, 15, 5, 303, 12, "A5-181")
+    #预定舱尾期验货
+    #Inspection().create_fba_inspection_link(cookies, 161, 15, 5, 303, "李朋", "A5-181","FBA16M9J26TK")
+
+    #预定舱生成订舱通知
+    #Inspection().create_fba_inspection_booking_link(cookies, 161, 15, 5, 303, "李朋", "A5-181","FBA16M9J26TK")
+
+
+

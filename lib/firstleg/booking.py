@@ -12,9 +12,11 @@ import time
 import requests
 
 from conf.baseconfig import waveecharmer_Host
+from lib.firstleg.shipmentbill import ShipmentBill
 from lib.login import Login
 from datetime import datetime, timedelta
 
+from lib.productandmaterial.product import Product
 from lib.purchase.purchaseorder import PurchaseOrder
 
 
@@ -44,6 +46,16 @@ class Booking:
         print("创建订舱单resp-----------\n" + resp.text)
         return resp
 
+    def create_from_fba_booking(self, cookies, payload):
+        """
+        创建订舱单-来源预定舱
+        :return:
+        """
+        url = f"{waveecharmer_Host}/api/booking/byprepare"
+        resp = requests.post(url=url, headers=cookies, json=payload)
+        print("创建订舱单-来源预定舱resp-----------\n" + resp.text)
+        return resp
+
     def booking_submit(self, bookingid, cookies):
         """
         提交
@@ -64,6 +76,16 @@ class Booking:
         print("获取订舱单resp-----------\n" + resp.text)
         return resp
 
+    def get_booking_details(self, cookies, bookingid):
+        """
+        获取订舱单详情
+        :return:
+        """
+        url = f"{waveecharmer_Host}/api/booking/details?ids={bookingid}"
+        resp = requests.get(url=url, headers=cookies)
+        print("获取订舱单详情resp-----------\n" + resp.text)
+        return resp
+
     def page_booking(self, cookies, bookingcode):
         """
         获取订舱单列表
@@ -73,6 +95,18 @@ class Booking:
         resp = requests.get(url=url, headers=cookies)
         print("获取订舱单列表resp-----------\n" + resp.text)
         return resp
+
+    def get_booking_allocatefba(self, cookies, bookingid, fbaShipmentCode):
+        """
+        分配计算FBA
+        :return:
+        """
+        url = f"{waveecharmer_Host}/api/booking/allocatefba/{bookingid}?fbaCodes=%22{fbaShipmentCode}%22"
+        resp = requests.get(url=url, headers=cookies)
+        print("分配计算FBAresp-----------\n" + resp.text)
+        return resp
+
+
 
     def repairshipping_booking(self, cookies, payload):
         """
@@ -104,7 +138,179 @@ class Booking:
         print("获取订舱单分页根据供应商resp-----------\n" + resp.text)
         return resp
 
-    def create_booking_link(self, cookies, shopId, warehouseId, operateDivisionId, purchaserId, targetWarehouseId,product_code):
+    def create_fba_booking_link(self, cookies, shopId, warehouseId, operateDivisionId, purchaserId,
+                                purchasername, product_code, fbaShipmentCode):
+        """
+        创建预订舱链路
+        :param isLCL:是否拼柜
+        :param cargoReadyDay:货号日期
+        :param containerId:货柜id
+        :param purchaseOrderId:采购单id
+        :param supplierAccountId:供应商账户id
+        :param purchaseBusinessType:备货 出运 常规
+        :param purchaseBusinessType:备货 出运 常规
+        :param locationType :  目的仓类型
+        :return:
+        """
+
+        # 创建出运采购单返回id
+        purchaseOrderIds = PurchaseOrder().create_shipment_purchaseorder_link(cookies, shopId, warehouseId,
+                                                                             operateDivisionId, purchaserId,
+                                                                             purchasername, product_code)
+
+        time.sleep(2)
+        fba_bookingids = []
+        for purchaseOrderId in purchaseOrderIds:
+
+
+            # 获取采购单明细
+            purchaseOrderDetailId_resp = PurchaseOrder().get_purchaseorder_details(cookies, purchaseOrderId)
+            skuDetailDimensionDetails = json.loads(purchaseOrderDetailId_resp.text)["result"]["skuDetailDimensionDetails"]
+
+            # 根据id获取sku明细
+
+            items = []
+            bookingQuantity = 100
+            for skuDetail in skuDetailDimensionDetails:
+                # 根据id获取sku明细
+                query_sku_byids_resp = Product().query_sku_byids(cookies, skuDetail["skuId"])
+                result = json.loads(query_sku_byids_resp.text)["result"][0]["suppliers"][0]
+                result["isChoose"] = True
+
+                skuDetail["bookingQuantity"] = bookingQuantity
+                items_dict = {
+                    "cpuQuantity": bookingQuantity * 1.05,
+                    "operateDivisionName": "运营青蛙椅事业部",
+                    "warehouseId": warehouseId,
+                    "purchaseOrderDetailId": skuDetail["id"],
+                    "allowBooking": True,
+                    "shopAccount": "LIPENG",
+                    "warehouseName": "恒丰仓库",
+                    "supplierName": "供应商名",
+                    "supplierId": 6,
+                    "isAllowNegative": True,
+                    "supplierList": [result],
+                    "ctnGrossWeight": 6,
+                    "ctnNetWeight": 6,
+                    "ctnQuantity": 5,
+                    "ctnLongX": 7,
+                    "ctnLongY": 7,
+                    "ctnLongZ": 7,
+                    "ctnVolume": 0.0003,
+                    "packageQuantity": bookingQuantity / 5,
+                    "grossWeight": 6,
+                    "productWeight": "600.00",
+                    "ctnGrossWeightAll": "120.00",
+                    "ctnLongXYZ": "0.0060"
+                }
+
+                skuDetail.update(items_dict)
+                print(skuDetail)
+                items.append(skuDetail)
+                bookingQuantity += 100
+
+            print(items)
+
+            # 创建订舱单
+            booking_payload = {
+                "code": "",
+                "cargoReadyDay": self.formatted_date,
+                "isLCL": None,
+                "containerId": None,
+                "volume": None,
+                "loadWeight": None,
+                "warehouseName": "恒丰仓库",
+                "attachments": [],
+                "remark": "",
+                "isPrepare": True,
+                "items": items
+            }
+
+            booking_resp = Booking().create_booking(cookies, booking_payload)
+            fba_bookingid = json.loads(booking_resp.text)["result"]
+            print(fba_bookingid)
+
+            # 提交订舱单
+            Booking().booking_submit(fba_bookingid, cookies)
+
+            # 分配计算FBA
+            booking_allocatefba_resp = Booking().get_booking_allocatefba(cookies, fba_bookingid, fbaShipmentCode)
+            booking_allocatefba_result = json.loads(booking_allocatefba_resp.text)["result"]
+            fnSkuAndSkus = []
+            for item in booking_allocatefba_result[0]["items"]:
+                fnSkuAndSku_dict = {
+                    "fnSku": item["fnSku"],
+                    "skuId": item["skuId"]
+                }
+                fnSkuAndSkus.append(fnSkuAndSku_dict)
+
+            # 根据FnSku和Sku获取货件明细
+            fnsku_sk_payload = {
+                "fnSkuAndSkus": fnSkuAndSkus
+            }
+            fnsku_sku_resp = ShipmentBill().fnsku_sku_shipmentbill(cookies, booking_allocatefba_result[0]["id"],
+                                                                   fnsku_sk_payload)
+            fnsku_sku_result = json.loads(fnsku_sku_resp.text)["result"]
+
+            # 补充发货信息
+            fbaItems = []
+            for item, fnsku in zip(booking_allocatefba_result[0]["items"], fnsku_sku_result):
+                fbaItem_dict = {
+                    "fbaShipmentItemId": fnsku["id"],
+                    "bookingBillItemId": item["bookingBillItemId"],
+                    "allocateQuantity": item['bookingQuantity']
+                }
+                fbaItems.append(fbaItem_dict)
+            repairshipping_payload = {
+                "id": fba_bookingid,
+                "locationType": 1,
+                "isFnSku": True,
+                "isFilled": False,
+                "eta": self.formatted_date_eta,
+                "sendOutGoodsType": None,
+                "isLCL": "false",
+                "containerId": None,
+                "warehouseName": "恒丰仓库",
+                "attachments": [],
+                "remark": "",
+                "overseaItems": [],
+                "fbaItems": [
+                    {
+                        "bookItems": fbaItems,
+                        "productStickerAttachments": [
+                            {
+                                "name": "货件4_加水印.pdf",
+                                "url": "https://wecharmer-erp-test.obs.cn-east-3.myhuaweicloud.com/ProhibitDeletion/1730788219978_def86e39_24110528754.pdf",
+
+                            }
+                        ],
+                        "packageStickerAttachments": [
+                            {
+                                "name": "货件4_加水印.pdf",
+                                "url": "https://wecharmer-erp-test.obs.cn-east-3.myhuaweicloud.com/ProhibitDeletion/1730788219978_def86e39_24110528754.pdf",
+
+                            }
+                        ],
+                        "fbaId": booking_allocatefba_result[0]["id"]
+                    }
+                ]
+            }
+
+            Booking().repairshipping_booking(cookies, repairshipping_payload)
+
+            # 审核单据
+            reviewshipping_payload = {
+                "id": fba_bookingid,
+                "isOld": False
+            }
+            Booking().reviewshipping_booking(cookies, reviewshipping_payload)
+
+            fba_bookingids.append(fba_bookingid)
+
+        return fba_bookingids
+
+    def create_booking_link(self, cookies, shopId, warehouseId, operateDivisionId, purchaserId, targetWarehouseId,
+                            product_code):
         """
         创建订舱单链路
         :param isLCL:是否拼柜
@@ -119,7 +325,7 @@ class Booking:
 
         # 创建采购单返回id
         purchaseOrderId = PurchaseOrder().create_purchaseorder_link(cookies, shopId, warehouseId, operateDivisionId,
-                                                                    purchaserId,product_code)
+                                                                    purchaserId, product_code)
 
         time.sleep(2)
 
@@ -127,10 +333,54 @@ class Booking:
         purchaseOrderDetailId_resp = PurchaseOrder().get_purchaseorder_details(cookies, purchaseOrderId)
         skuDetailDimensionDetails = json.loads(purchaseOrderDetailId_resp.text)["result"]["skuDetailDimensionDetails"]
 
+        # 根据id获取sku明细
+
+        items = []
+        bookingQuantity = 100
+        for skuDetail in skuDetailDimensionDetails:
+            # 根据id获取sku明细
+            query_sku_byids_resp = Product().query_sku_byids(cookies, skuDetail["skuId"])
+            result = json.loads(query_sku_byids_resp.text)["result"][0]["suppliers"][0]
+            result["isChoose"] = True
+
+            skuDetail["bookingQuantity"] = bookingQuantity
+            items_dict = {
+                "cpuQuantity": bookingQuantity * 1.05,
+                "operateDivisionName": "运营青蛙椅事业部",
+                "warehouseId": warehouseId,
+                "purchaseOrderDetailId": skuDetail["id"],
+                "allowBooking": True,
+                "shopAccount": "LIPENG",
+                "warehouseName": "恒丰仓库",
+                "supplierName": "供应商名",
+                "supplierId": 6,
+                "isAllowNegative": True,
+                "supplierList": [result],
+                "ctnGrossWeight": 6,
+                "ctnNetWeight": 6,
+                "ctnQuantity": 5,
+                "ctnLongX": 7,
+                "ctnLongY": 7,
+                "ctnLongZ": 7,
+                "ctnVolume": 0.0003,
+                "packageQuantity": bookingQuantity / 5,
+                "grossWeight": 6,
+                "productWeight": "600.00",
+                "ctnGrossWeightAll": "120.00",
+                "ctnLongXYZ": "0.0060"
+            }
+
+            skuDetail.update(items_dict)
+            print(skuDetail)
+            items.append(skuDetail)
+            bookingQuantity += 100
+
+        print(items)
+
         # 创建订舱单
         booking_payload = {
             "code": "",
-            "cargoReadyDay": "2024-09-28",
+            "cargoReadyDay": self.formatted_date,
             "isLCL": "false",
             "containerId": 4,
             "volume": 3375,
@@ -139,349 +389,7 @@ class Booking:
             "attachments": [],
             "remark": "",
             "isPrepare": False,
-            "items": [
-                {
-                    "id": skuDetailDimensionDetails[0]["id"],
-                    "purchaseOrderId": skuDetailDimensionDetails[0]["purchaseOrderId"],
-                    "purchaseOrderCode": skuDetailDimensionDetails[0]["purchaseOrderCode"],
-                    "productCategoryId": 210,
-                    "productId": 54840,
-                    "productCategoryFullName": "摇摇椅>红色摇摇椅",
-                    "productCode": "A5-181",
-                    "productName": "常山仓蜡笔小新A5-181",
-                    "skuCode": "A5-181-A-F",
-                    "oldSkuCode": "",
-                    "skuImageUrl": "https://wecharmer-erp-test.obs.cn-east-3.myhuaweicloud.com/ProhibitDeletion/1725604863983_a405e9c1_24090600259.JPG",
-                    "thirdImageUrl": None,
-                    "useImageSource": 2,
-                    "skuName": "常山仓蜡笔小新-黄色-J",
-                    "tranSku": None,
-                    "taxRate": 0.04,
-                    "maxQuantity": 105,
-                    "putOnQuantity": 0,
-                    "inventoryAvailableQuantity": 0,
-                    "bookingQuantity": 18,
-                    "exchangeRate": 1,
-                    "companyCurrencyType": "CNY",
-                    "purchaseOrderDetailDimension": 1,
-                    "applyPurchaseBillId": 4208,
-                    "bhApplyPurchaseBillId": None,
-                    "stockInQuantity": 0,
-                    "retrunedQuantity": 0,
-                    "supplierStockInQuantity": 0,
-                    "cyPurchasedQuantity": 0,
-                    "lastCYPurchaseQuantity": 0,
-                    "link": "",
-                    "createdBy": 303,
-                    "createdByName": "李朋",
-                    "createdTime": "2024-09-06T06:57:13.019773+00:00",
-                    "skuId": 49532,
-                    "quantity": 100,
-                    "suite": 6,
-                    "overflowRate": 0.05,
-                    "unitPrice": 6,
-                    "remark": None,
-                    "expectedArrivalTime": None,
-                    "cpuQuantity": 105,
-                    "operateDivisionName": "运营青蛙椅事业部",
-                    "warehouseId": 15,
-                    "purchaseOrderDetailId": skuDetailDimensionDetails[0]["id"],
-                    "allowBooking": True,
-                    "shopAccount": "LIPENG",
-                    "warehouseName": "恒丰仓库",
-                    "supplierName": "供应商名",
-                    "supplierId": 6,
-                    "isAllowNegative": True,
-                    "supplierList": [
-                        {
-                            "id": 12499,
-                            "skuId": 49532,
-                            "supplierId": 6,
-                            "supplierCode": "GYS00007",
-                            "supplierName": "供应商名",
-                            "currency": "CNY",
-                            "price": 6,
-                            "default": True,
-                            "link": "",
-                            "ctnLongX": 6,
-                            "ctnLongY": 6,
-                            "ctnLongZ": 6,
-                            "ctnQuantity": 6,
-                            "ctnNetWeight": 6,
-                            "ctnGrossWeight": 6,
-                            "ctnVolume": 0.0002,
-                            "isChoose": True
-                        }
-                    ],
-                    "ctnGrossWeight": 6,
-                    "ctnNetWeight": 6,
-                    "ctnQuantity": 6,
-                    "ctnLongX": 6,
-                    "ctnLongY": 6,
-                    "ctnLongZ": 6,
-                    "ctnVolume": 0.0002,
-                    "packageQuantity": 17,
-                    "grossWeight": 6,
-                    "productWeight": "612.00",
-                    "ctnGrossWeightAll": "102.00",
-                    "ctnLongXYZ": "0.0034"
-                },
-                {
-                    "id": skuDetailDimensionDetails[1]["id"],
-                    "purchaseOrderId": skuDetailDimensionDetails[1]["purchaseOrderId"],
-                    "purchaseOrderCode": skuDetailDimensionDetails[1]["purchaseOrderCode"],
-                    "productCategoryId": 210,
-                    "productId": 54840,
-                    "productCategoryFullName": "摇摇椅>红色摇摇椅",
-                    "productCode": "A5-181",
-                    "productName": "常山仓蜡笔小新A5-181",
-                    "skuCode": "A5-181-A-L",
-                    "oldSkuCode": "",
-                    "skuImageUrl": "https://wecharmer-erp-test.obs.cn-east-3.myhuaweicloud.com/ProhibitDeletion/1725604863983_a405e9c1_24090600259.JPG",
-                    "thirdImageUrl": True,
-                    "useImageSource": 2,
-                    "skuName": "常山仓蜡笔小新-黄色-P",
-                    "tranSku": True,
-                    "taxRate": 0.04,
-                    "maxQuantity": 212,
-                    "putOnQuantity": 0,
-                    "inventoryAvailableQuantity": 0,
-                    "bookingQuantity": 24,
-                    "exchangeRate": 1,
-                    "companyCurrencyType": "CNY",
-                    "purchaseOrderDetailDimension": 1,
-                    "applyPurchaseBillId": 4208,
-                    "bhApplyPurchaseBillId": True,
-                    "stockInQuantity": 0,
-                    "retrunedQuantity": 0,
-                    "supplierStockInQuantity": 0,
-                    "cyPurchasedQuantity": 0,
-                    "lastCYPurchaseQuantity": 0,
-                    "link": "",
-                    "createdBy": 303,
-                    "createdByName": "李朋",
-                    "createdTime": "2024-09-06T06:57:13.019775+00:00",
-                    "skuId": 49533,
-                    "quantity": 200,
-                    "suite": 6,
-                    "overflowRate": 0.06,
-                    "unitPrice": 6,
-                    "remark": True,
-                    "expectedArrivalTime": True,
-                    "cpuQuantity": 212,
-                    "operateDivisionName": "运营青蛙椅事业部",
-                    "warehouseId": 15,
-                    "purchaseOrderDetailId": skuDetailDimensionDetails[1]["id"],
-                    "shopAccount": "LIPENG",
-                    "warehouseName": "恒丰仓库",
-                    "supplierName": "供应商名",
-                    "supplierId": 6,
-                    "isAllowNegative": True,
-                    "supplierList": [
-                        {
-                            "id": 12500,
-                            "skuId": 49533,
-                            "supplierId": 6,
-                            "supplierCode": "GYS00007",
-                            "supplierName": "供应商名",
-                            "currency": "CNY",
-                            "price": 6,
-                            "default": True,
-                            "link": "",
-                            "ctnLongX": 6,
-                            "ctnLongY": 6,
-                            "ctnLongZ": 6,
-                            "ctnQuantity": 6,
-                            "ctnNetWeight": 6,
-                            "ctnGrossWeight": 6,
-                            "ctnVolume": 0.0002,
-                            "isChoose": True
-                        }
-                    ],
-                    "ctnGrossWeight": 6,
-                    "ctnNetWeight": 6,
-                    "ctnQuantity": 6,
-                    "ctnLongX": 6,
-                    "ctnLongY": 6,
-                    "ctnLongZ": 6,
-                    "ctnVolume": 0.0002,
-                    "packageQuantity": 35,
-                    "grossWeight": 6,
-                    "productWeight": "1260.00",
-                    "ctnGrossWeightAll": "210.00",
-                    "ctnLongXYZ": "0.0070"
-                },
-                {
-                    "id": skuDetailDimensionDetails[2]["id"],
-                    "purchaseOrderId": skuDetailDimensionDetails[2]["purchaseOrderId"],
-                    "purchaseOrderCode": skuDetailDimensionDetails[2]["purchaseOrderCode"],
-                    "productCategoryId": 210,
-                    "productId": 54840,
-                    "productCategoryFullName": "摇摇椅>红色摇摇椅",
-                    "productCode": "A5-181",
-                    "productName": "常山仓蜡笔小新A5-181",
-                    "skuCode": "A5-181-B-F",
-                    "oldSkuCode": "",
-                    "skuImageUrl": "https://wecharmer-erp-test.obs.cn-east-3.myhuaweicloud.com/ProhibitDeletion/1725604866221_4f633db4_24090600260.JPG",
-                    "thirdImageUrl": None,
-                    "useImageSource": 2,
-                    "skuName": "常山仓蜡笔小新-绿色-J",
-                    "tranSku": None,
-                    "taxRate": 0.04,
-                    "maxQuantity": 318,
-                    "putOnQuantity": 0,
-                    "inventoryAvailableQuantity": 0,
-                    "bookingQuantity": 30,
-                    "exchangeRate": 1,
-                    "companyCurrencyType": "CNY",
-                    "purchaseOrderDetailDimension": 1,
-                    "applyPurchaseBillId": 4208,
-                    "bhApplyPurchaseBillId": None,
-                    "stockInQuantity": 0,
-                    "retrunedQuantity": 0,
-                    "supplierStockInQuantity": 0,
-                    "cyPurchasedQuantity": 0,
-                    "lastCYPurchaseQuantity": 0,
-                    "link": "",
-                    "createdBy": 303,
-                    "createdByName": "李朋",
-                    "createdTime": "2024-09-06T06:57:13.019775+00:00",
-                    "skuId": 49534,
-                    "quantity": 300,
-                    "suite": 6,
-                    "overflowRate": 0.06,
-                    "unitPrice": 6,
-                    "remark": None,
-                    "expectedArrivalTime": None,
-                    "cpuQuantity": 318,
-                    "operateDivisionName": "运营青蛙椅事业部",
-                    "warehouseId": 15,
-                    "purchaseOrderDetailId": skuDetailDimensionDetails[2]["id"],
-                    "shopAccount": "LIPENG",
-                    "warehouseName": "恒丰仓库",
-                    "supplierName": "供应商名",
-                    "supplierId": 6,
-                    "isAllowNegative": True,
-                    "supplierList": [
-                        {
-                            "id": 12501,
-                            "skuId": 49534,
-                            "supplierId": 6,
-                            "supplierCode": "GYS00007",
-                            "supplierName": "供应商名",
-                            "currency": "CNY",
-                            "price": 6,
-                            "default": True,
-                            "link": "",
-                            "ctnLongX": 6,
-                            "ctnLongY": 6,
-                            "ctnLongZ": 6,
-                            "ctnQuantity": 6,
-                            "ctnNetWeight": 6,
-                            "ctnGrossWeight": 6,
-                            "ctnVolume": 0.0002,
-                            "isChoose": True
-                        }
-                    ],
-                    "ctnGrossWeight": 6,
-                    "ctnNetWeight": 6,
-                    "ctnQuantity": 6,
-                    "ctnLongX": 6,
-                    "ctnLongY": 6,
-                    "ctnLongZ": 6,
-                    "ctnVolume": 0.0002,
-                    "packageQuantity": 53,
-                    "grossWeight": 6,
-                    "productWeight": "1908.00",
-                    "ctnGrossWeightAll": "318.00",
-                    "ctnLongXYZ": "0.0106"
-                },
-                {
-                    "id": skuDetailDimensionDetails[3]["id"],
-                    "purchaseOrderId": skuDetailDimensionDetails[3]["purchaseOrderId"],
-                    "purchaseOrderCode": skuDetailDimensionDetails[3]["purchaseOrderCode"],
-                    "productCategoryId": 210,
-                    "productId": 54840,
-                    "productCategoryFullName": "摇摇椅>红色摇摇椅",
-                    "productCode": "A5-181",
-                    "productName": "常山仓蜡笔小新A5-181",
-                    "skuCode": "A5-181-B-L",
-                    "oldSkuCode": "",
-                    "skuImageUrl": "https://wecharmer-erp-test.obs.cn-east-3.myhuaweicloud.com/ProhibitDeletion/1725604866221_4f633db4_24090600260.JPG",
-                    "thirdImageUrl": None,
-                    "useImageSource": 2,
-                    "skuName": "常山仓蜡笔小新-绿色-P",
-                    "tranSku": None,
-                    "taxRate": 0.04,
-                    "maxQuantity": 424,
-                    "putOnQuantity": 0,
-                    "inventoryAvailableQuantity": 0,
-                    "bookingQuantity": 36,
-                    "exchangeRate": 1,
-                    "companyCurrencyType": "CNY",
-                    "purchaseOrderDetailDimension": 1,
-                    "applyPurchaseBillId": 4208,
-                    "bhApplyPurchaseBillId": None,
-                    "stockInQuantity": 0,
-                    "retrunedQuantity": 0,
-                    "supplierStockInQuantity": 0,
-                    "cyPurchasedQuantity": 0,
-                    "lastCYPurchaseQuantity": 0,
-                    "link": "",
-                    "createdBy": 303,
-                    "createdByName": "李朋",
-                    "createdTime": "2024-09-06T06:57:13.019776+00:00",
-                    "skuId": 49535,
-                    "quantity": 400,
-                    "suite": 6,
-                    "overflowRate": 0.06,
-                    "unitPrice": 6,
-                    "remark": None,
-                    "expectedArrivalTime": None,
-                    "cpuQuantity": 424,
-                    "operateDivisionName": "运营青蛙椅事业部",
-                    "warehouseId": 15,
-                    "purchaseOrderDetailId": skuDetailDimensionDetails[3]["id"],
-                    "shopAccount": "LIPENG",
-                    "warehouseName": "恒丰仓库",
-                    "supplierName": "供应商名",
-                    "supplierId": 6,
-                    "isAllowNegative": True,
-                    "supplierList": [
-                        {
-                            "id": 12502,
-                            "skuId": 49535,
-                            "supplierId": 6,
-                            "supplierCode": "GYS00007",
-                            "supplierName": "供应商名",
-                            "currency": "CNY",
-                            "price": 6,
-                            "default": True,
-                            "link": "",
-                            "ctnLongX": 6,
-                            "ctnLongY": 6,
-                            "ctnLongZ": 6,
-                            "ctnQuantity": 6,
-                            "ctnNetWeight": 6,
-                            "ctnGrossWeight": 6,
-                            "ctnVolume": 0.0002,
-                            "isChoose": True
-                        }
-                    ],
-                    "ctnGrossWeight": 6,
-                    "ctnNetWeight": 6,
-                    "ctnQuantity": 6,
-                    "ctnLongX": 6,
-                    "ctnLongY": 6,
-                    "ctnLongZ": 6,
-                    "ctnVolume": 0.0002,
-                    "packageQuantity": 70,
-                    "grossWeight": 6,
-                    "productWeight": "2520.00",
-                    "ctnGrossWeightAll": "420.00",
-                    "ctnLongXYZ": "0.0140"
-                }
-            ]
+            "items": items
         }
 
         booking_resp = Booking().create_booking(cookies, booking_payload)
@@ -494,10 +402,20 @@ class Booking:
         # 获取订舱单
         Booking_Detail_resp = Booking().get_booking(cookies, bookingid)
         result = json.loads(Booking_Detail_resp.text)["result"]
-
-
-
-
+        overseaItems = []
+        for overseaItem in result["items"]:
+            overseaItem_dict = {
+                "id": 0,
+                "bookingBillItemId": overseaItem["id"],
+                "allocateQuantity": overseaItem["quantity"],
+                "allocatePackageQuantity": overseaItem["quantity"] / overseaItem["ctnQuantity"],
+                "shippingShopId": shopId,
+                "shippingOperateDivisionId": operateDivisionId,
+                "locationWarehouseId": targetWarehouseId,
+                "packageSticker": "",
+                "productSticker": overseaItem["skuCode"]
+            }
+            overseaItems.append(overseaItem_dict)
 
         # 补充订舱单发货信息
         repairshipping_payload = {
@@ -513,52 +431,7 @@ class Booking:
             "warehouseName": "恒丰仓库",
             "attachments": [],
             "remark": "",
-            "overseaItems": [
-                {
-                    "id": 0,
-                    "bookingBillItemId": result["items"][0]["id"],
-                    "allocateQuantity": 18,
-                    "allocatePackageQuantity": 3,
-                    "shippingShopId": shopId,
-                    "shippingOperateDivisionId": operateDivisionId,
-                    "locationWarehouseId": targetWarehouseId,
-                    "packageSticker": "",
-                    "productSticker": skuDetailDimensionDetails[0]["skuCode"]
-                },
-                {
-                    "id": 0,
-                    "bookingBillItemId": result["items"][1]["id"],
-                    "allocateQuantity": 24,
-                    "allocatePackageQuantity": 4,
-                    "shippingShopId": shopId,
-                    "shippingOperateDivisionId": operateDivisionId,
-                    "locationWarehouseId": targetWarehouseId,
-                    "packageSticker": "",
-                    "productSticker": skuDetailDimensionDetails[1]["skuCode"]
-                },
-                {
-                    "id": 0,
-                    "bookingBillItemId": result["items"][2]["id"],
-                    "allocateQuantity": 30,
-                    "allocatePackageQuantity": 5,
-                    "shippingShopId": shopId,
-                    "shippingOperateDivisionId": operateDivisionId,
-                    "locationWarehouseId": targetWarehouseId,
-                    "packageSticker": "",
-                    "productSticker": skuDetailDimensionDetails[2]["skuCode"]
-                },
-                {
-                    "id": 0,
-                    "bookingBillItemId": result["items"][3]["id"],
-                    "allocateQuantity": 36,
-                    "allocatePackageQuantity": 6,
-                    "shippingShopId": shopId,
-                    "shippingOperateDivisionId": operateDivisionId,
-                    "locationWarehouseId": targetWarehouseId,
-                    "packageSticker": "",
-                    "productSticker": skuDetailDimensionDetails[3]["skuCode"]
-                }
-            ],
+            "overseaItems": overseaItems,
             "fbaItems": []
         }
 
@@ -573,7 +446,64 @@ class Booking:
 
         return bookingid
 
+    def create_booking_from_fba_link(self,cookies,bookingid):
+        """
+        创建订舱单链路-来源预定舱
+        :param isLCL:是否拼柜
+        :param cargoReadyDay:货号日期
+        :param containerId:货柜id
+        :param purchaseOrderId:采购单id
+        :param supplierAccountId:供应商账户id
+        :param purchaseBusinessType:备货 出运 常规
+        :param purchaseBusinessType:备货 出运 常规
+        :return:
+        """
+
+        #获取预定舱详情
+        get_detail_resp=Booking().get_booking_details(cookies,bookingid)
+        get_detail_result=json.loads(get_detail_resp.text)["result"]
+
+        items=[]
+        for item,fbaAllocateItem in zip(get_detail_result[0]["items"],get_detail_result[0]["fbaAllocateItems"]):
+            item_dict={
+                    "sourceBookingBillId": item["bookingBillId"],
+                    "sourceBookingBillItemId": item["id"],
+                    "sourceFBAAllocateItemId": fbaAllocateItem["id"],
+                    "sourceQuantity": item["surplusAllocateQuantity"],
+                    "sourcePackageQuantity": item["surplusAllocatePackageQuantity"]
+                }
+            items.append(item_dict)
+
+
+        #创建订舱单-来源预定舱
+        byprepare_payload = {
+            "containerId": 4,
+            "isLCL": False,
+            "remark": None,
+            "cargoReadyDay": self.formatted_date_eta,
+            "attachments": [],
+            "updateItems": [],
+            "items": items
+        }
+
+        from_fba_booking_resp=Booking().create_from_fba_booking(cookies,byprepare_payload)
+        bookingid_from_fba=json.loads(from_fba_booking_resp.text)["result"]
+        # 提交订舱单
+        Booking().booking_submit(bookingid_from_fba, cookies)
+
+        # 审核单据
+        reviewshipping_payload = {
+            "id": bookingid_from_fba
+        }
+        Booking().reviewshipping_booking(cookies, reviewshipping_payload)
+
+        return bookingid_from_fba
+
 
 if __name__ == '__main__':
     cookies = Login.loginWecharmer()
-    Booking().create_booking_link(cookies, 161, 15, 5, 303, 11,"A5-181")
+    # 创建订舱单
+    Booking().create_booking_link(cookies, 161, 15, 5, 303, 180, "A5-181")
+
+    # 创建预定舱
+    #Booking().create_fba_booking_link(cookies, 161, 15, 5, 303, "李朋", "A5-181", "FBA16M9J26TK")

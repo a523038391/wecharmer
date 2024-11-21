@@ -27,11 +27,17 @@ class PurchaseOrder:
 
         # 创建一个时间差，表示3天
         three_days = timedelta(days=3)
+        three_days_future = timedelta(days=180)
+        three_days_old = timedelta(days=90)
 
         # 将时间差加到当前日期上
         new_date = now + three_days
+        future_date = now + three_days_future
+        old_date = now + three_days_old
 
         self.formatted_date = new_date.strftime("%Y-%m-%d %H:%M:%S")
+        self.formatted_date_future = future_date.strftime("%Y-%m-%d %H:%M:%S")
+        self.formatted_date_old = old_date.strftime("%Y-%m-%d %H:%M:%S")
 
     def get_purchaseorder_details(self, cookies, purchaseorderid):
         """
@@ -82,6 +88,264 @@ class PurchaseOrder:
         resp = requests.get(url=url, headers=cookies)
         print("获取采购单明细resp-----------\n" + resp.text)
         return resp
+
+    def create_stock_purchaseorder_link(self, cookies, shopId, warehouseId, operateDivisionId, purchaserId,
+                                        purchasername, product_code):
+        """
+        创建备货采购单链路
+        :param companyId:财务公司抬头id
+        :param supplierId:供应商id
+        :param operateDivisionId:运营事业部
+        :param shopId:店铺
+        :param supplierAccountId:供应商账户id
+        :param purchaseBusinessType:备货 出运 常规
+        :return:
+        """
+
+        # 创建备货单返回id
+        applypurchasebillid = ApplyPurchaseBill().create_stock_applypurchasebill_link(cookies, shopId,
+                                                                                      operateDivisionId, purchaserId,
+                                                                                      purchasername, product_code)
+
+        time.sleep(2)
+
+        # 创建备货采购单
+        purchaseorder_payload = {
+            "companyId": 2,
+            "supplierId": 6,
+            "warehouseId": warehouseId,
+            "purchaseOrderType": 1,
+            "purchasePlanBillCode": "",
+            "productDevelopType": 1,
+            "supplierPaymentMethod": 2,
+            "operateDivisionId": operateDivisionId,
+            "shopId": shopId,
+            "remark": "",
+            "logisticsFee": 0,
+            "attachments": [],
+            "purchaserId": purchaserId,
+            "deliveryDate": None,
+            "companyCurrencyType": "CNY",
+            "exchangeRate": 1,
+            "supplierContactPerson": "小常",
+            "supplierContactPersonMobile": "17620866231",
+            "supplierSettlementMethod": 1,
+            "supplierSettlementDay": 20,
+            "supplierPrepaidRate": 0.8,
+            "purchaseOrderCode": None,
+            "purchaseSourceType": 1,
+            "applyPurchaseBillId": applypurchasebillid,
+            "operaterId": purchaserId,
+            "operaterName": purchasername,
+            "applyPurchaseBillCode": "BS24110100005",
+            "soureBillId": 5324,
+            "expectedArrivalTime": None,
+            "expectedPutOnSaleTime": None,
+            "supplierAccountNumber": "",
+            "supplierOpeningBank": "",
+            "chargePerson": "小李1",
+            "chargePersonMobile": "176201232411",
+            "address": "广州"
+        }
+
+
+        for i in range(5):
+
+
+            purchaseorder_resp = PurchaseOrder().create_purchaseorder(cookies, purchaseorder_payload)
+            print("创建备货采购单第"+str(i)+"次")
+            print(purchaseorder_resp)
+            purchaseorder_result=json.loads(purchaseorder_resp.text)["result"]
+
+
+            if purchaseorder_result==None:
+                continue
+
+            else:
+
+                break
+        purchaseorderid = json.loads(purchaseorder_resp.text)["result"]["id"]
+
+        # 获取备货单明细
+        get_applypurchasebill_resp = ApplyPurchaseBill().get_applypurchasebill_detail_all(cookies, applypurchasebillid)
+        get_applypurchasebill_result = json.loads(get_applypurchasebill_resp.text)["result"]
+
+        # 创建采购单明细
+        purchaseOrderDetails = []
+        unitPrice = 100
+        for item in get_applypurchasebill_result["skuAndMonthYearDetailDimensionDetails"]:
+            unitPrice += 50
+            purchaseOrderDetails_dict = {
+                "skuId": item["skuId"],
+                "quantity": item["quantity"],
+                "unitPrice": unitPrice,
+                "taxRate": 0.04,
+                "expectedArrivalTime": item["expectedArrivalTime"],
+                "overflowRate": 0
+            }
+            purchaseOrderDetails.append(purchaseOrderDetails_dict)
+        purchaseorder_details_payload = {
+            "purchaseOrderId": purchaseorderid,
+            "purchaseOrderDetails": purchaseOrderDetails
+        }
+
+        for i in range(5):
+
+            purchaseorder_details_resp=PurchaseOrder().create_purchaseorder_details(cookies, purchaseorder_details_payload)
+            purchaseorder_details_result=json.loads(purchaseorder_details_resp.text)["result"]
+            print("创建出运采购单明细第" + str(i) + "次")
+            if purchaseorder_details_result==None:
+                continue
+
+            else:
+                break
+
+        # 送审
+        payload = {}
+        PurchaseOrder().purchaseorder_review(purchaseorderid, cookies, payload)
+
+        return {"purchaseorderid": purchaseorderid, "applypurchasebillid": applypurchasebillid}
+
+    def create_shipment_purchaseorder_link(self, cookies, shopId, warehouseId, operateDivisionId, purchaserId,
+                                           purchasername, product_code):
+        """
+        创建出运采购单链路
+        :param companyId:财务公司抬头id
+        :param supplierId:供应商id
+        :param operateDivisionId:运营事业部
+        :param shopId:店铺
+        :param supplierAccountId:供应商账户id
+        :param purchaseBusinessType:备货 出运 常规
+        :return:
+        """
+
+        # 创建备货采购单
+        PurchaseOrderdata = PurchaseOrder().create_stock_purchaseorder_link(cookies, shopId, warehouseId,
+                                                                            operateDivisionId, purchaserId,
+                                                                            purchasername, product_code)
+        purchaseorderids=[]
+        for i in range(2):
+            # 创建出运申购单
+
+            shipment_applypurchasebillid = ApplyPurchaseBill().create_shipment_applypurchasebill_link(cookies, shopId,
+                                                                                                      operateDivisionId,
+                                                                                                      purchaserId,
+                                                                                                      purchasername,
+                                                                                                      PurchaseOrderdata[
+                                                                                                          "applypurchasebillid"])
+
+            # 获取备货单明细
+            get_applypurchasebill_resp = ApplyPurchaseBill().get_applypurchasebill_detail_all(cookies, shipment_applypurchasebillid)
+            get_applypurchasebill_result = json.loads(get_applypurchasebill_resp.text)["result"]
+            print("chuyun")
+
+            # 创建出运采购单
+            purchaseorder_payload = {
+                "companyId": 2,
+                "supplierId": 6,
+                "warehouseId": warehouseId,
+                "purchaseOrderType": 1,
+                "productDevelopType": 1,
+                "supplierPaymentMethod": 2,
+                "operateDivisionId": operateDivisionId,
+                "shopId": shopId,
+                "remark": "",
+                "logisticsFee": 0,
+                "attachments": [],
+                "purchaserId": purchaserId,
+                "deliveryDate": self.formatted_date,
+                "planDeliveryDate": None,
+                "companyCurrencyType": "CNY",
+                "exchangeRate": 1,
+                "exchangeRateLimit": None,
+                "supplierContactPerson": "小常",
+                "supplierContactPersonMobile": "17620866231",
+                "supplierSettlementMethod": 1,
+                "supplierSettlementDay": 20,
+                "supplierPrepaidRate": 0.8,
+                "purchaseSourceType": 2,
+                "purchaseOrderCode": None,
+                "purchasePlanBillId": None,
+                "skuSupplierObj": {
+                    "49532": 6,
+                    "49533": 6,
+                    "49534": 6,
+                    "49535": 6
+                },
+                "bhApplyPurchaseBillId": PurchaseOrderdata[
+                    "applypurchasebillid"],
+                "operaterId": purchaserId,
+                "operaterName": purchasername,
+                "bhPurchaseBillId": PurchaseOrderdata["purchaseorderid"],
+                "bhPurchaseBillCode": "BO24110100016",
+                "applyPurchaseBillCode": "QG24110100027",
+                "applyPurchaseBillId": shipment_applypurchasebillid,
+                "soureBillId": shipment_applypurchasebillid,
+                "expectedArrivalTime": self.formatted_date_old,
+                "expectedPutOnSaleTime": self.formatted_date_future,
+                "supplierAccountNumber": "",
+                "supplierOpeningBank": "",
+                "chargePerson": "小李1",
+                "chargePersonMobile": "176201232411",
+                "address": "广州"
+            }
+            for i in range(5):
+
+
+                purchaseorder_resp = PurchaseOrder().create_purchaseorder(cookies, purchaseorder_payload)
+                print("创建出运采购单第"+str(i)+"次")
+                print(purchaseorder_resp)
+                purchaseorder_result=json.loads(purchaseorder_resp.text)["result"]
+
+
+                if purchaseorder_result==None:
+                    continue
+
+                else:
+
+                    break
+            purchaseorderid = json.loads(purchaseorder_resp.text)["result"]["id"]
+
+            # 创建采购单明细
+            purchaseOrderDetails = []
+            unitPrice = 100
+            for item in get_applypurchasebill_result["skuDetailDimensionDetails"]:
+                unitPrice += 50
+                purchaseOrderDetails_dict = {
+                    "skuId": item["skuId"],
+                    "quantity": item["quantity"],
+                    "overflowRate": 0.05,
+                    "unitPrice": unitPrice,
+                    "taxRate": 0.04
+                }
+                purchaseOrderDetails.append(purchaseOrderDetails_dict)
+            purchaseorder_details_payload = {
+                "purchaseOrderId": purchaseorderid,
+                "purchaseOrderDetails": purchaseOrderDetails
+            }
+            print(purchaseorder_details_payload)
+            for i in range(5):
+
+                purchaseorder_details_resp=PurchaseOrder().create_purchaseorder_details(cookies, purchaseorder_details_payload)
+                purchaseorder_details_result=json.loads(purchaseorder_details_resp.text)["result"]
+                print("创建出运采购单明细第" + str(i) + "次")
+                if purchaseorder_details_result==None:
+                    continue
+
+                else:
+                    break
+
+
+            # 送审
+            payload = {}
+            PurchaseOrder().purchaseorder_review(purchaseorderid, cookies, payload)
+            purchaseorderids.append(purchaseorderid)
+        print(purchaseorderids)
+
+        return purchaseorderids
+
+
+
 
     def create_purchaseorder_link(self, cookies, shopId, warehouseId, operateDivisionId, purchaserId, product_code):
         """
@@ -136,7 +400,7 @@ class PurchaseOrder:
             "bhApplyPurchaseBillId": None,
             "applyPurchaseBillCode": "QG24082300017",
             "applyPurchaseBillId": applypurchasebillid,
-            "soureBillId": 3973,
+            "soureBillId": applypurchasebillid,
             "expectedArrivalTime": "2024-08-23T07:20:13+00:00",
             "expectedPutOnSaleTime": "2024-11-21T07:20:13+00:00",
             "supplierAccountNumber": "",
@@ -145,8 +409,22 @@ class PurchaseOrder:
             "chargePersonMobile": "17620865451",
             "address": "Detail Address"
         }
-        purchaseorder_resp = PurchaseOrder().create_purchaseorder(cookies, purchaseorder_payload)
-        print(purchaseorder_resp)
+
+        for i in range(5):
+
+
+            purchaseorder_resp = PurchaseOrder().create_purchaseorder(cookies, purchaseorder_payload)
+            print("创建常规采购单第"+str(i)+"次")
+            print(purchaseorder_resp)
+            purchaseorder_result=json.loads(purchaseorder_resp.text)["result"]
+
+
+            if purchaseorder_result==None:
+                continue
+
+            else:
+
+                break
         purchaseorderid = json.loads(purchaseorder_resp.text)["result"]["id"]
 
         # 查询商品信息
@@ -165,26 +443,40 @@ class PurchaseOrder:
         product_resp = Product().query_spulist(cookies, product_list_payload)
         product_result = json.loads(product_resp.text)["result"]["items"][0]["skus"]
 
+        # 获取备货单明细
+        get_applypurchasebill_resp = ApplyPurchaseBill().get_applypurchasebill_detail_all(cookies, applypurchasebillid)
+        get_applypurchasebill_result = json.loads(get_applypurchasebill_resp.text)["result"]
+
         # 创建采购单明细
-        purchaseOrderDetails=[]
-        quantity=0
-        unitPrice=100
-        for item in product_result:
-            quantity+=100
-            unitPrice+=50
-            purchaseOrderDetails_dict={
-                    "skuId": item["id"],
-                    "quantity": quantity,
-                    "overflowRate": 0.05,
-                    "unitPrice": unitPrice,
-                    "taxRate": 0.04
-                }
+        purchaseOrderDetails = []
+        unitPrice = 100
+        for item in get_applypurchasebill_result["skuDetailDimensionDetails"]:
+            unitPrice += 50
+            purchaseOrderDetails_dict = {
+                "skuId": item["skuId"],
+                "quantity": item["quantity"],
+                "overflowRate": 0.05,
+                "unitPrice": unitPrice,
+                "taxRate": 0.04
+            }
             purchaseOrderDetails.append(purchaseOrderDetails_dict)
         purchaseorder_details_payload = {
             "purchaseOrderId": purchaseorderid,
             "purchaseOrderDetails": purchaseOrderDetails
         }
-        PurchaseOrder().create_purchaseorder_details(cookies, purchaseorder_details_payload)
+
+
+        for i in range(5):
+
+            purchaseorder_details_resp=PurchaseOrder().create_purchaseorder_details(cookies, purchaseorder_details_payload)
+            purchaseorder_details_result=json.loads(purchaseorder_details_resp.text)["result"]
+            print("创建常规采购单明细第" + str(i) + "次")
+            if purchaseorder_details_result==None:
+                continue
+
+            else:
+                break
+
 
         # 送审
         payload = {}
@@ -195,4 +487,11 @@ class PurchaseOrder:
 
 if __name__ == '__main__':
     cookies = Login.loginWecharmer()
-    PurchaseOrder().create_purchaseorder_link(cookies, 161, 150, 5, 303, "A5-181")
+    # 创建常规采购单
+    #PurchaseOrder().create_purchaseorder_link(cookies, 161, 15, 5, 303, "A5-181")
+
+    # 创建备货采购单
+    # PurchaseOrder().create_stock_purchaseorder_link(cookies, 161, 15, 5, 303, "李朋", "A5-181")
+
+    # 创建出运采购单
+    PurchaseOrder().create_shipment_purchaseorder_link(cookies, 161, 15, 5, 303, "李朋", "A5-181")

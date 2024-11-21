@@ -38,6 +38,18 @@ class Product:
         print("查询sku信息resp-----------\n" + resp.text)
         return resp
 
+    def query_sku_byids(self,cookies,id):
+        """
+        根据id查询sku信息
+        :return:
+        """
+
+        url = f"{waveecharmer_Host}/api/product/sku/list/byids?skuIds={id}"
+        resp = requests.get(url=url, headers=cookies)
+        print("根据id查询sku信息resp-----------\n" + resp.text)
+        return resp
+
+
     def query_skulist(self, cookies, skucode):
         """
         根据sku编码查询sku信息

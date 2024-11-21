@@ -59,6 +59,17 @@ class ShipmentBill:
         print("查询发货单商品信息resp-----------\n" + resp.text)
         return resp
 
+
+    def fnsku_sku_shipmentbill(self, cookies,id, payload):
+        """
+        根据FnSku和Sku获取货件明细
+        :return:
+        """
+        url = f"{waveecharmer_Host}/api/fbashipmentinfo/{id}/details/fnsku-sku"
+        resp = requests.post(url=url, headers=cookies, json=payload)
+        print("根据FnSku和Sku获取货件明细resp-----------\n" + resp.text)
+        return resp
+
     def create_fab_shipmentbill(self, cookies, payload):
         """
         创建fab发货单
@@ -108,6 +119,111 @@ class ShipmentBill:
         resp = requests.post(url=url, headers=cookies, json=payload)
         print("关联货件resp-----------\n" + resp.text)
         return resp
+
+    def fba_shipmentbill_link_v1(self,cookies, warehouseId, targetWarehouseId, operateDivisionId,
+                                  shopId, purchaserId, product_code,  fbaShipmentCode):
+        """
+        创建发货单按件链路
+        :param sendOutGoodsType:仓库中转类型
+        :param warehouseId:发货仓
+        :param targetWarehouseId:目的仓
+        :param operateDivisionId:运营事业部
+        :param shopId:店铺
+        :param shipmentBillStatus:发货单状态
+        :param shipmentType:按箱 按件
+        :return:
+        """
+
+        # 创建采购单按件上架
+        Stock().purchase_order_link(cookies, shopId, warehouseId, operateDivisionId, purchaserId, product_code)
+
+        # 根据货件号查询货件列表
+        fbashipmentinfo_url = f"{waveecharmer_Host}/api/fbashipmentinfo/page?shipmentStatus=1,2,3,6,7,8,9,10,11&isEmptyReferenceId=false&sorts=%7B%22field%22:%22id%22,%22order%22:%22desc%22%7D&fbaShipmentCode={fbaShipmentCode}&pageIndex=1&pageSize=10"
+        fbashipmentinfo_resp = ShipmentBill().query_fbashipmentinfo_page(fbashipmentinfo_url, cookies)
+        sourceShipmentInfoId = json.loads(fbashipmentinfo_resp.text)["result"]["items"][0]["id"]
+
+        # 创建发货单
+        shipmentbill_payload = {
+            "remark": "",
+            "shipmentBillCode": None,
+            "sendOutGoodsType": 1,
+            "expectedDeliveryTime": self.formatted_date,
+            "sourceShipmentInfoId": sourceShipmentInfoId,
+            "warehouseId": warehouseId,
+            "shipmentBillStatus": 11,
+            "targetWarehouseId": targetWarehouseId,
+            "shopId": shopId,
+            "shippingAddress": "1111111111111111",
+            "attachments": [],
+            "productShipmentType": None,
+            "sourceShipmentInfoCode": None,
+            "operateDivisionId": operateDivisionId,
+            "shipmentType": 0
+        }
+        print(shipmentbill_payload)
+        shipmentbill_resp = ShipmentBill().create_fab_shipmentbill(cookies, shipmentbill_payload)
+        shipmentbillid = json.loads(shipmentbill_resp.text)["result"]["id"]
+        shipmentBillCode = json.loads(shipmentbill_resp.text)["result"]["shipmentBillCode"]
+
+        # 查询货件明细
+        fbashipmentinfo_details_url = f"{waveecharmer_Host}/api/fbashipmentinfo/{sourceShipmentInfoId}/details/page?operateDivisionIds={operateDivisionId}&sorts=%7B%22field%22:%22id%22,%22order%22:%22desc%22%7D&pageIndex=1&pageSize=10"
+        fbashipmentinfo_item_resp = ShipmentBill().get_fbashipmentinfo_details(fbashipmentinfo_details_url, cookies)
+        bashipmentinfo_item_result= json.loads(fbashipmentinfo_item_resp.text)["result"]["items"]
+        items=[]
+
+        for item in bashipmentinfo_item_result:
+            # 查询库存信息
+            get_batchstocks_url = f"{waveecharmer_Host}/api/stock/batchstocks/groupByShop-OperateDivision-StockType?goodOrDefectives=1&skuIds={item['skuId']}&shopIds={shopId}&warehouseIds={warehouseId}&operateDivisionIds={operateDivisionId}&stockTypes=1&pageSize=10000"
+            get_batchstocks_rest=Stock().get_batchstocks(get_batchstocks_url, cookies)
+            get_batchstocks_result=json.loads(get_batchstocks_rest.text)["result"][0]
+            items_dict={
+                    "sellerSku": item["sellerSku"],
+                    "fnSku": item["fnSku"],
+                    "skuId": item["skuId"],
+                    "plannedShipmentQuantity": get_batchstocks_result["availableStockQuantity"]
+                }
+            items.append(items_dict)
+
+
+        # 创建fab发货单明细
+
+        shipmentbill_item_payload = {
+            "items": items,
+            "thirdPartyWarehouseReferences": [],
+            "boxes": []
+        }
+        ShipmentBill().create_fab_shipmentbill_item(shipmentbillid, cookies, shipmentbill_item_payload)
+
+        # 查询发货单商品信息
+        shipmentbill_detailbysku_resp = ShipmentBill().get_item_stock(cookies, shipmentbillid)
+        shipmentbill_detailbysku_result = json.loads(shipmentbill_detailbysku_resp.text)["result"]
+
+        items=[]
+
+        for item in shipmentbill_detailbysku_result:
+            items_dict={
+                    "id": item["id"],
+                    "skuId": item["skuId"],
+                    "plannedShipmentQuantity": item["plannedShipmentQuantity"],
+                    "warehouseLocationIds": []
+                }
+
+            items.append(items_dict)
+
+        # 分配库存
+        shipmentbill_allocate_payload = {
+            "id": shipmentbillid,
+            "items": items
+        }
+        ShipmentBill().shipmentbill_allocate(cookies, shipmentbill_allocate_payload)
+
+        shipmentbilldata = { "shipmentbillid": int(shipmentbillid),
+                            "shipmentBillCode": shipmentBillCode}
+
+        return shipmentbilldata
+
+
+
 
     def fba_shipmentbill_link(self, cookies, fbaShipmentCode, warehouseId, targetWarehouseId, operateDivisionId, shopId,
                               skucode, skuIds):
@@ -337,5 +453,12 @@ class ShipmentBill:
 if __name__ == '__main__':
     cookies = Login.loginWecharmer()
     # ShipmentBill().fba_shipmentbill_link(cookies, "FBA16K8TWW9P", 150, 135, 2, 122, "B-XF2-00A-D-9-0125-QGR-XS", 1002)
-    ShipmentBill().fba_shipmentbill_box_link(cookies, 150, 135, 5, 162, 303,
-                                             "A5-181", 3, "FBA16M9J26TK")
+
+    #发货单-按箱
+    #ShipmentBill().fba_shipmentbill_box_link(cookies, 150, 135, 5, 162, 303,
+    #                                        "A5-181", 3, "FBA16M9J26TK")
+
+    #发货单-按件
+    ShipmentBill().fba_shipmentbill_link_v1(cookies, 150, 135, 5, 162, 303,
+                                             "A5-181",  "FBA16M9J26TK")
+

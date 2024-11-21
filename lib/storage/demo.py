@@ -24,7 +24,7 @@ APP_KEY = "212b0a5a74f2a7e5"
 APP_SECRET = "3MSzbZBgHEbluiEurhC9XGxR7KJL5luH"
 
 
-def youdao_translate(text, to_lang="en"):
+def youdao_translate(text, to_lang="es"):
     """
     使用有道翻译API进行翻译
     """
@@ -35,6 +35,7 @@ def youdao_translate(text, to_lang="en"):
     signType="v3"
 
     url = f"{YOUDAO_URL}?appKey={APP_KEY}&q={quote(text)}&from=zh-CHS&to={to_lang}&salt={salt}&sign={sign}&curtime={curtime}&signType={signType}"
+    #url1=f"{YOUDAO_URL}?appKey={APP_KEY}&q={quote(text)}&from=zh-CHS&to={to_lang}&salt={salt}&sign={sign}&curtime={curtime}&signType={signType}"
     print(url)
     response = requests.get(url)
     if json.loads(response.text)["errorCode"] == "0":
@@ -47,7 +48,7 @@ def youdao_translate(text, to_lang="en"):
 
 
 # 读取Excel文件
-file_name = '导出多语言数据2024101711191824101700051.xlsx'
+file_name = '导出多语言数据2024112010522524112000052.xlsx'
 df = pd.read_excel(file_name)
 
 # 确保'Text'列是字符串类型

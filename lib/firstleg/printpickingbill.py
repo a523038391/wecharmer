@@ -74,6 +74,20 @@ class Printpickingbill:
             print("打印出错",e)
 
 
+    def shipmentbill_print(self,cookies,sourceType, warehouseId, targetWarehouseId, operateDivisionId,
+                                  shopId, purchaserId,purchaserName, product_code, fbaShipmentCode):
+
+        # 创建发货单按件
+
+        shipmentbilldata = ShipmentBill().fba_shipmentbill_link_v1( cookies, warehouseId, targetWarehouseId, operateDivisionId,
+                                  shopId, purchaserId, product_code, fbaShipmentCode)
+
+        # 打印
+        Printpickingbill().print_link(cookies, sourceType, shipmentbilldata["shipmentbillid"],
+                                      shipmentbilldata["shipmentBillCode"], purchaserId, purchaserName)
+        return shipmentbilldata
+
+
 
     def shipmentbill_box_print(self,cookies,sourceType,warehouseId, targetWarehouseId, operateDivisionId,
                                   shopId, purchaserId,purchaserName, product_code, quantity, fbaShipmentCode):
@@ -84,6 +98,20 @@ class Printpickingbill:
         #打印
         Printpickingbill().print_link(cookies,sourceType,shipmentbilldata["shipmentbillid"],shipmentbilldata["shipmentBillCode"],purchaserId,purchaserName)
         return shipmentbilldata
+
+
+    def stockupbill_box_print(self,cookies, sourceType,shopId, warehouseId, targetWarehouseId, operateDivisionId,
+                                    purchaserId,purchaserName, product_code, quantity):
+        #创建备货单按箱
+        stockupbilldata=StockupBill().create_stockupbill_box_link(cookies, shopId, warehouseId, targetWarehouseId, operateDivisionId,
+                                    purchaserId, product_code, quantity)
+
+        # 打印
+        Printpickingbill().print_link(cookies, sourceType, stockupbilldata["stockUpBillId"],
+                                      stockupbilldata["sourceCode"], purchaserId, purchaserName)
+
+        return stockupbilldata
+
 
 
     def stockupbill_print(self,cookies,sourceType, shopId, warehouseId, targetWarehouseId, operateDivisionId,
@@ -106,6 +134,16 @@ if __name__ == '__main__':
     #Printpickingbill().shipmentbill_box_print(cookies,1,150, 135, 5, 162, 303,"李朋",
     #                                        "A5-181", 3, "FBA16M9J26TK")
 
+
+    #创建发货单按件-打印
+    Printpickingbill().shipmentbill_print(cookies,1,150, 135, 5, 162, 303,"李朋",
+                                            "A5-181", "FBA16M9J26TK")
+
     # 创建备货单按件-打印
 
-    Printpickingbill().stockupbill_print(cookies,2,161,150,11,5,303,"李朋","A5-181")
+    #Printpickingbill().stockupbill_print(cookies,2,161,150,11,5,303,"李朋","A5-181")
+
+
+    # 创建备货单按箱-打印
+    #Printpickingbill().stockupbill_box_print(cookies,2,161,150,11,5,303,"李朋","A5-181",3)
+

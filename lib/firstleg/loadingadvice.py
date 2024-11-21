@@ -138,6 +138,23 @@ class LoadingAdvice:
                                            stockupbilldata["sourceCode"])
 
         return stockupbilldata
+
+    def shipmentbill_loadingadvice_a_link(self,cookies,sourceBillCategory,sourceType, warehouseId,warehouseName, targetWarehouseId, operateDivisionId,
+                                  shopId, purchaserId,purchaserName, product_code, fbaShipmentCode):
+
+
+        # 发货单-按件-装箱
+        shipmentbilldata=ScanPacking().shipmentbill_scanpacking_a_link(cookies,sourceType, warehouseId, targetWarehouseId, operateDivisionId,
+                                  shopId, purchaserId,purchaserName, product_code, fbaShipmentCode)
+
+        # 装柜
+        LoadingAdvice().loadingadvice_link(cookies, sourceBillCategory, warehouseId, warehouseName,
+                                           shipmentbilldata["shipmentbillid"],
+                                           shipmentbilldata["shipmentBillCode"])
+
+        return shipmentbilldata
+
+
 if __name__ == '__main__':
     cookies = Login.loginWecharmer()
     # LoadingAdvice().loadingadvice_link(cookies,507,"150","李朋自营仓",1158,"DC24090600036")
@@ -145,5 +162,9 @@ if __name__ == '__main__':
     #LoadingAdvice().shipmentbill_loadingadvice_link(cookies, 505, 1, 150, "李朋自营仓", 135, 5, 162, 303, "李朋",
     #                                                "A5-181", 3, "FBA16M9J26TK")
     #备货单按件发货-装柜
-    LoadingAdvice().stockupbill_loadingadvice_link(cookies, 502, 2, 161, 150, "李朋自营仓", 11, 5, 303, "李朋",
-                                                   "A5-181")
+    # LoadingAdvice().stockupbill_loadingadvice_link(cookies, 502, 2, 161, 150, "李朋自营仓", 11, 5, 303, "李朋",
+    #                                                "A5-181")
+
+    #发货单按件发货-装柜
+    LoadingAdvice().shipmentbill_loadingadvice_a_link(cookies, 505, 1, 150, "李朋自营仓", 135, 5, 162, 303, "李朋",
+                                                   "A5-181",  "FBA16M9J26TK")
