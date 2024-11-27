@@ -170,7 +170,7 @@ class Inspection:
         packagedStockItems = []
         boxSizeItems = []
         for item, booking in zip(inspection_items_result, get_booking_result["items"]):
-            requireItemIdObj[f"{item["purchaseOrderCode"]}-{item["skuCode"]}"] = item["id"]
+            requireItemIdObj[f"{item['purchaseOrderCode']}-{item['skuCode']}"] = item["id"]
             packagedStockItem_dict = {
                 "purchaseOrderId": item["purchaseOrderId"],
                 "skuId": item["skuId"],

@@ -56,7 +56,7 @@ class Login:
 
 
         if json.loads(resp.text)["message"] == '成功':
-            cookies = {"Authorization": f"Bearer {json.loads(resp.text)["data"]["access_token"]}"}
+            cookies = {"Authorization": f"Bearer {json.loads(resp.text)['data']['access_token']}"}
             print("获取cookies:\n", cookies)
             return cookies
 

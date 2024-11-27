@@ -50,7 +50,7 @@ class DeliveryBill:
         LoadingAdvice().loadingadvice_link(cookies,billOfLadingCode,sourceBillCategory,warehouseId,warehouseName,booking_data["bookingid"],booking_data["bookingcode"])
 
         #根据订舱单号查询备货单
-        url = f"{waveecharmer_Host}/api/stockupbill/page?stockUpBillStatuses=1,2,3,5,6&sorts=%7B%22field%22:%22id%22,%22order%22:%22desc%22%7D&bookingBillCode={booking_data["bookingcode"]}&pageIndex=1&pageSize=10"
+        url = f"{waveecharmer_Host}/api/stockupbill/page?stockUpBillStatuses=1,2,3,5,6&sorts=%7B%22field%22:%22id%22,%22order%22:%22desc%22%7D&bookingBillCode={booking_data['bookingcode']}&pageIndex=1&pageSize=10"
         sourceCode_resp=StockupBill().query_stockupbill(cookies,url)
         sourceCode=json.loads(sourceCode_resp.text)["result"]["items"][0]["stockUpBillCode"]
 

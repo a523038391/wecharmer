@@ -406,7 +406,7 @@ class StockupBill:
 
         for item in query_skulist_result["items"]:
             # 查询批次库存
-            url = f"{waveecharmer_Host}/api/stock/batchstocks/groupByShop-OperateDivision-StockType?skuIds={item["id"]}&shopIds={shopId}&warehouseIds={warehouseId}&goodOrDefectives=1&operateDivisionIds={operateDivisionId}&stockTypes=1"
+            url = f"{waveecharmer_Host}/api/stock/batchstocks/groupByShop-OperateDivision-StockType?skuIds={item['id']}&shopIds={shopId}&warehouseIds={warehouseId}&goodOrDefectives=1&operateDivisionIds={operateDivisionId}&stockTypes=1"
             batchstocks_resp = Stock().get_batchstocks(url, cookies)
             batchstocks_result = json.loads(batchstocks_resp.text)["result"]
             stockUpBillDetail_dict = {
