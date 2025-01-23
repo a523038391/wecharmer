@@ -482,13 +482,13 @@ if __name__ == '__main__':
     # ContainerBill().create_containerbill_link(cookies,"BH24062000052",502,303,"李朋","3453353534")
     count = 0
     while count < 1:
-        ContainerBill().booking_deliverybill_link(cookies, 507, 161, 15, "恒丰仓库", 5, 303, "李朋", 12, 502, 3,
+        ContainerBill().booking_deliverybill_link(cookies, 507, 162, 15, "恒丰仓库", 5, 303, "李朋", 189, 502, 3,
                                                   "A5-181")
         print("这是第 {} 次循环".format(count + 1))
         count += 1
 
     # 订舱单-装柜列表
-    # ContainerBill().booking_deliverybill_link(cookies, 507, 161, 15, "恒丰仓库", 5, 303, "李朋", 12, 502, 3, "A5-154")
+    #ContainerBill().booking_deliverybill_link(cookies, 507, 161, 15, "恒丰仓库", 5, 303, "李朋", 12, 502, 3, "A5-181")
 
     # 备货单-按件-货柜列表
     # #ContainerBill().stockupbill_containerBill_link(cookies, 502, 2, 161, 150, "李朋自营仓", 5, 303, "李朋", 11, 502, 3,

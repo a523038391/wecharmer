@@ -27,7 +27,6 @@ class Product:
 
         self.formatted_date = now.strftime("%Y-%m-%d %H:%M:%S")
 
-
     def query_skulist_v1(self, cookies, payload):
         """
         查询sku信息
@@ -38,7 +37,17 @@ class Product:
         print("查询sku信息resp-----------\n" + resp.text)
         return resp
 
-    def query_sku_byids(self,cookies,id):
+    def product_file(self, cookies, payload):
+        """
+        上传产品附件
+        :return:
+        """
+        url = f"{waveecharmer_Host}/api/product/file"
+        resp = requests.post(url=url, headers=cookies, json=payload)
+        print("上传产品附件resp-----------\n" + resp.text)
+        return resp
+
+    def query_sku_byids(self, cookies, id):
         """
         根据id查询sku信息
         :return:
@@ -48,7 +57,6 @@ class Product:
         resp = requests.get(url=url, headers=cookies)
         print("根据id查询sku信息resp-----------\n" + resp.text)
         return resp
-
 
     def query_skulist(self, cookies, skucode):
         """
@@ -98,6 +106,16 @@ class Product:
         url = f"{waveecharmer_Host}/api/product/base"
         resp = requests.post(url=url, headers=cookies, json=payload)
         print("创建产品基本信息resp-----------\n" + resp.text)
+        return resp
+
+    def sellersku_page(self, cookies, payload):
+        """
+        产品对外关系分页
+        :return:
+        """
+        url = f"{waveecharmer_Host}/api/product/sellersku/page"
+        resp = requests.post(url=url, headers=cookies, json=payload)
+        print("产品对外关系分页resp-----------\n" + resp.text)
         return resp
 
     def create_productspec(self, cookies, payload, product_id):
@@ -221,7 +239,7 @@ class Product:
                     "useImageSource": 2,
                     "code": product_code + "-A-A-20",
                     "oldCode": "",
-                    "cnName": "卡皮巴拉-大小-20cm",
+                    "cnName": "卡皮巴拉-大小-20cm-" + self.formatted_date,
                     "status": 2,
                     "longX": 55,
                     "longY": 55,
@@ -241,8 +259,8 @@ class Product:
                     ],
                     "suppliers": [
                         {
-                            "supplierId": 107,
-                            "supplierCode": "A00199",
+                            "supplierId": 6,
+                            "supplierCode": "GYS00007",
                             "currency": "CNY",
                             "price": 5,
                             "default": True,
@@ -267,7 +285,7 @@ class Product:
                     "useImageSource": 2,
                     "code": product_code + "-A-B-50",
                     "oldCode": "",
-                    "cnName": "卡皮巴拉-大小-50cm",
+                    "cnName": "卡皮巴拉-大小-50cm-" + self.formatted_date,
                     "status": 2,
                     "longX": 55,
                     "longY": 55,
@@ -287,8 +305,8 @@ class Product:
                     ],
                     "suppliers": [
                         {
-                            "supplierId": 107,
-                            "supplierCode": "A00199",
+                            "supplierId": 6,
+                            "supplierCode": "GYS00007",
                             "currency": "CNY",
                             "price": 5,
                             "default": True,
@@ -313,7 +331,7 @@ class Product:
                     "useImageSource": 2,
                     "code": product_code + "-B-A-70",
                     "oldCode": "",
-                    "cnName": "卡皮巴拉-大小-70cm",
+                    "cnName": "卡皮巴拉-大小-70cm-" + self.formatted_date,
                     "status": 2,
                     "longX": 55,
                     "longY": 55,
@@ -333,8 +351,8 @@ class Product:
                     ],
                     "suppliers": [
                         {
-                            "supplierId": 107,
-                            "supplierCode": "A00199",
+                            "supplierId": 6,
+                            "supplierCode": "GYS00007",
                             "currency": "CNY",
                             "price": 5,
                             "default": True,
@@ -359,7 +377,7 @@ class Product:
                     "useImageSource": 2,
                     "code": product_code + "-B-B-100",
                     "oldCode": "",
-                    "cnName": "卡皮巴拉-大小-100cm",
+                    "cnName": "卡皮巴拉-大小-100cm-"+self.formatted_date,
                     "status": 2,
                     "longX": 55,
                     "longY": 55,
@@ -379,8 +397,8 @@ class Product:
                     ],
                     "suppliers": [
                         {
-                            "supplierId": 107,
-                            "supplierCode": "A00199",
+                            "supplierId": 6,
+                            "supplierCode": "GYS00007",
                             "currency": "CNY",
                             "price": 5,
                             "default": True,
@@ -419,7 +437,7 @@ class Product:
             "pageIndex": 1,
             "pageSize": 10
         }
-        product_resp = Product().query_spulist(cookies,product_list_payload )
+        product_resp = Product().query_spulist(cookies, product_list_payload)
         product_result = json.loads(product_resp.text)["result"]["items"][0]["skus"]
 
         product_data = {"productId": product_id, "productName": "卡皮巴拉" + self.formatted_date,
@@ -432,6 +450,20 @@ class Product:
                                  "cnName": product_result[2]["cnName"]},
                         "sku4": {"id": product_result[3]["id"], "code": product_result[3]["code"],
                                  "cnName": product_result[3]["cnName"]}}
+
+        # 上传产品附件
+        file_payload = {
+            "attachedId": product_id,
+            "files": [
+                {
+                    "url": "https://wecharmer-erp-test.obs.cn-east-3.myhuaweicloud.com/ProhibitDeletion/1734499501913_f0511a8a_24121800252.xlsx",
+                    "name": "导出货柜单_24121302483_20241218.xlsx",
+                    "fileTypeId": 10
+                }
+            ]
+        }
+
+        Product().product_file(cookies, file_payload)
 
         print(product_data)
 

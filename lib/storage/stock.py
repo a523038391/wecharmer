@@ -328,6 +328,6 @@ class Stock:
 if __name__ == '__main__':
     cookies = Login.loginWecharmer()
 
-    Stock().purchase_order_link(cookies, 162, 150, 5, 303, "A5-181")
+    #Stock().purchase_order_link(cookies, 161, 150, 5, 303, "A5-181")
     # Stock().get_batchstocks(cookies,5452,161,150)
-    #Stock().purchase_order_box_link(cookies, 162, 128, 5, 303, "A5-181")
+    Stock().purchase_order_box_link(cookies, 161, 1, 5, 303, "A5-181")

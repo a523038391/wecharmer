@@ -66,6 +66,17 @@ class ApplyPurchaseBill:
         print("获取某个申购单所有明细resp-----------\n" + resp.text)
         return resp
 
+
+    def get_applypurchasebill(self, cookies, applypurchasebillid):
+        """
+        获取某个申购单详情
+        :return:
+        """
+        url = f"{waveecharmer_Host}/api/applypurchasebill/{applypurchasebillid}"
+        resp = requests.get(url=url, headers=cookies)
+        print("获取某个申购单详情resp-----------\n" + resp.text)
+        return resp
+
     def applypurchasebill_review(self, applypurchasebillid, cookies, payload):
         """
         送审
@@ -209,7 +220,7 @@ class ApplyPurchaseBill:
         payload = {}
         ApplyPurchaseBill().applypurchasebill_review(shipment_applypurchasebillid, cookies, payload)
         return shipment_applypurchasebillid
-    def create_applypurchasebill_link(self, cookies, shopId, operateDivisionId, product_code):
+    def create_applypurchasebill_link(self, cookies, shopId, operateDivisionId, operaterId,product_code):
 
         """
         创建常规申购单链路
@@ -251,7 +262,13 @@ class ApplyPurchaseBill:
             "purchaseBusinessType": 3,
             "expectedShipmentAddr": 1,
             "isQuickReturn": False,
-            "attachments": []
+            "operaterId": operaterId,
+            "operaterName": "李朋",
+            "attachments": [],
+            "warehouseType": 2,
+            "transportationTypeId": 18,
+            "transportationTypeName": None,
+            "stockInType": None
         }
         print(applypurchasebill_payload)
         applypurchasebill_resp = ApplyPurchaseBill().create_applypurchasebill(cookies, applypurchasebill_payload)
@@ -288,10 +305,10 @@ if __name__ == '__main__':
     cookies = Login.loginWecharmer()
 
     # 创建常规申购单
-    # ApplyPurchaseBill().create_applypurchasebill_link(cookies, 161, 5, "A5-181")
+    ApplyPurchaseBill().create_applypurchasebill_link(cookies, 161, 5 ,303,"A5-181")
 
     # 创建备货申购单
-    ApplyPurchaseBill().create_stock_applypurchasebill_link(cookies, 161, 5,303,"李朋","A5-181")
+    #ApplyPurchaseBill().create_stock_applypurchasebill_link(cookies, 161, 5,303,"李朋","A5-181")
 
     # 创建出运申购单
     #ApplyPurchaseBill().create_shipment_applypurchasebill_link(cookies, 161, 5, 303, "李朋", "A5-181")

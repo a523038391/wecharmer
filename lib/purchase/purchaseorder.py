@@ -89,6 +89,16 @@ class PurchaseOrder:
         print("获取采购单明细resp-----------\n" + resp.text)
         return resp
 
+    def page_purchaseorder(self, cookies, purchaseordercode):
+        """
+        查询采购单列表
+        :return:
+        """
+        url = f"{waveecharmer_Host}/api/purchaseorder/page?purchaseSourceTypes=4&purchaseOrderStatuses=2&sorts=%7B%22field%22:%22id%22,%22order%22:%22desc%22%7D&purchaseOrderCode={purchaseordercode}&pageIndex=1&pageSize=10"
+        resp = requests.get(url=url, headers=cookies)
+        print("查询采购单列表resp-----------\n" + resp.text)
+        return resp
+
     def create_stock_purchaseorder_link(self, cookies, shopId, warehouseId, operateDivisionId, purchaserId,
                                         purchasername, product_code):
         """
@@ -129,7 +139,7 @@ class PurchaseOrder:
             "exchangeRate": 1,
             "supplierContactPerson": "小常",
             "supplierContactPersonMobile": "17620866231",
-            "supplierSettlementMethod": 1,
+            "supplierSettlementMethod": 3,
             "supplierSettlementDay": 20,
             "supplierPrepaidRate": 0.8,
             "purchaseOrderCode": None,
@@ -148,17 +158,14 @@ class PurchaseOrder:
             "address": "广州"
         }
 
-
         for i in range(5):
 
-
             purchaseorder_resp = PurchaseOrder().create_purchaseorder(cookies, purchaseorder_payload)
-            print("创建备货采购单第"+str(i)+"次")
+            print("创建备货采购单第" + str(i) + "次")
             print(purchaseorder_resp)
-            purchaseorder_result=json.loads(purchaseorder_resp.text)["result"]
+            purchaseorder_result = json.loads(purchaseorder_resp.text)["result"]
 
-
-            if purchaseorder_result==None:
+            if purchaseorder_result == None:
                 continue
 
             else:
@@ -191,10 +198,11 @@ class PurchaseOrder:
 
         for i in range(5):
 
-            purchaseorder_details_resp=PurchaseOrder().create_purchaseorder_details(cookies, purchaseorder_details_payload)
-            purchaseorder_details_result=json.loads(purchaseorder_details_resp.text)["result"]
+            purchaseorder_details_resp = PurchaseOrder().create_purchaseorder_details(cookies,
+                                                                                      purchaseorder_details_payload)
+            purchaseorder_details_result = json.loads(purchaseorder_details_resp.text)["result"]
             print("创建出运采购单明细第" + str(i) + "次")
-            if purchaseorder_details_result==None:
+            if purchaseorder_details_result == None:
                 continue
 
             else:
@@ -223,7 +231,7 @@ class PurchaseOrder:
         PurchaseOrderdata = PurchaseOrder().create_stock_purchaseorder_link(cookies, shopId, warehouseId,
                                                                             operateDivisionId, purchaserId,
                                                                             purchasername, product_code)
-        purchaseorderids=[]
+        purchaseorderids = []
         for i in range(2):
             # 创建出运申购单
 
@@ -235,7 +243,8 @@ class PurchaseOrder:
                                                                                                           "applypurchasebillid"])
 
             # 获取备货单明细
-            get_applypurchasebill_resp = ApplyPurchaseBill().get_applypurchasebill_detail_all(cookies, shipment_applypurchasebillid)
+            get_applypurchasebill_resp = ApplyPurchaseBill().get_applypurchasebill_detail_all(cookies,
+                                                                                              shipment_applypurchasebillid)
             get_applypurchasebill_result = json.loads(get_applypurchasebill_resp.text)["result"]
             print("chuyun")
 
@@ -260,7 +269,7 @@ class PurchaseOrder:
                 "exchangeRateLimit": None,
                 "supplierContactPerson": "小常",
                 "supplierContactPersonMobile": "17620866231",
-                "supplierSettlementMethod": 1,
+                "supplierSettlementMethod": 3,
                 "supplierSettlementDay": 20,
                 "supplierPrepaidRate": 0.8,
                 "purchaseSourceType": 2,
@@ -291,14 +300,12 @@ class PurchaseOrder:
             }
             for i in range(5):
 
-
                 purchaseorder_resp = PurchaseOrder().create_purchaseorder(cookies, purchaseorder_payload)
-                print("创建出运采购单第"+str(i)+"次")
+                print("创建出运采购单第" + str(i) + "次")
                 print(purchaseorder_resp)
-                purchaseorder_result=json.loads(purchaseorder_resp.text)["result"]
+                purchaseorder_result = json.loads(purchaseorder_resp.text)["result"]
 
-
-                if purchaseorder_result==None:
+                if purchaseorder_result == None:
                     continue
 
                 else:
@@ -326,15 +333,15 @@ class PurchaseOrder:
             print(purchaseorder_details_payload)
             for i in range(5):
 
-                purchaseorder_details_resp=PurchaseOrder().create_purchaseorder_details(cookies, purchaseorder_details_payload)
-                purchaseorder_details_result=json.loads(purchaseorder_details_resp.text)["result"]
+                purchaseorder_details_resp = PurchaseOrder().create_purchaseorder_details(cookies,
+                                                                                          purchaseorder_details_payload)
+                purchaseorder_details_result = json.loads(purchaseorder_details_resp.text)["result"]
                 print("创建出运采购单明细第" + str(i) + "次")
-                if purchaseorder_details_result==None:
+                if purchaseorder_details_result == None:
                     continue
 
                 else:
                     break
-
 
             # 送审
             payload = {}
@@ -343,9 +350,6 @@ class PurchaseOrder:
         print(purchaseorderids)
 
         return purchaseorderids
-
-
-
 
     def create_purchaseorder_link(self, cookies, shopId, warehouseId, operateDivisionId, purchaserId, product_code):
         """
@@ -361,9 +365,14 @@ class PurchaseOrder:
 
         # 创建备货单返回id
         applypurchasebillid = ApplyPurchaseBill().create_applypurchasebill_link(cookies, shopId, operateDivisionId,
+                                                                                purchaserId,
                                                                                 product_code)
 
         time.sleep(2)
+
+        #获取申购单详情
+        get_applypurchase_resp=ApplyPurchaseBill().get_applypurchasebill(cookies,applypurchasebillid)
+        get_applypurchase_result=json.loads(get_applypurchase_resp.text)["result"]
 
         # 创建采购单
         purchaseorder_payload = {
@@ -385,7 +394,7 @@ class PurchaseOrder:
             "exchangeRate": 1,
             "supplierContactPerson": "小常",
             "supplierContactPersonMobile": "17620866231",
-            "supplierSettlementMethod": 1,
+            "supplierSettlementMethod": 3,
             "supplierSettlementDay": 20,
             "supplierPrepaidRate": 0.8,
             "purchaseSourceType": 4,
@@ -398,13 +407,15 @@ class PurchaseOrder:
                 "6358": 6
             },
             "bhApplyPurchaseBillId": None,
+            "operaterId": purchaserId,
+            "operaterName": "李朋",
             "applyPurchaseBillCode": "QG24082300017",
             "applyPurchaseBillId": applypurchasebillid,
             "soureBillId": applypurchasebillid,
-            "expectedArrivalTime": "2024-08-23T07:20:13+00:00",
-            "expectedPutOnSaleTime": "2024-11-21T07:20:13+00:00",
-            "supplierAccountNumber": "",
-            "supplierOpeningBank": "",
+            "expectedArrivalTime": get_applypurchase_result["expectedArrivalTime"],
+            "expectedPutOnSaleTime": get_applypurchase_result["expectedPutOnSaleTime"],
+            "supplierAccountNumber": "3308110120100011538",
+            "supplierOpeningBank": "广州银行",
             "chargePerson": "小飞",
             "chargePersonMobile": "17620865451",
             "address": "Detail Address"
@@ -412,14 +423,12 @@ class PurchaseOrder:
 
         for i in range(5):
 
-
             purchaseorder_resp = PurchaseOrder().create_purchaseorder(cookies, purchaseorder_payload)
-            print("创建常规采购单第"+str(i)+"次")
+            print("创建常规采购单第" + str(i) + "次")
             print(purchaseorder_resp)
-            purchaseorder_result=json.loads(purchaseorder_resp.text)["result"]
+            purchaseorder_result = json.loads(purchaseorder_resp.text)["result"]
 
-
-            if purchaseorder_result==None:
+            if purchaseorder_result == None:
                 continue
 
             else:
@@ -465,18 +474,17 @@ class PurchaseOrder:
             "purchaseOrderDetails": purchaseOrderDetails
         }
 
-
         for i in range(5):
 
-            purchaseorder_details_resp=PurchaseOrder().create_purchaseorder_details(cookies, purchaseorder_details_payload)
-            purchaseorder_details_result=json.loads(purchaseorder_details_resp.text)["result"]
+            purchaseorder_details_resp = PurchaseOrder().create_purchaseorder_details(cookies,
+                                                                                      purchaseorder_details_payload)
+            purchaseorder_details_result = json.loads(purchaseorder_details_resp.text)["result"]
             print("创建常规采购单明细第" + str(i) + "次")
-            if purchaseorder_details_result==None:
+            if purchaseorder_details_result == None:
                 continue
 
             else:
                 break
-
 
         # 送审
         payload = {}
@@ -488,10 +496,10 @@ class PurchaseOrder:
 if __name__ == '__main__':
     cookies = Login.loginWecharmer()
     # 创建常规采购单
-    #PurchaseOrder().create_purchaseorder_link(cookies, 161, 15, 5, 303, "A5-181")
+    PurchaseOrder().create_purchaseorder_link(cookies, 161, 15, 5, 303, "A5-181")
 
     # 创建备货采购单
     # PurchaseOrder().create_stock_purchaseorder_link(cookies, 161, 15, 5, 303, "李朋", "A5-181")
 
     # 创建出运采购单
-    PurchaseOrder().create_shipment_purchaseorder_link(cookies, 161, 15, 5, 303, "李朋", "A5-181")
+    # PurchaseOrder().create_shipment_purchaseorder_link(cookies, 161, 15, 5, 303, "李朋", "A5-181")

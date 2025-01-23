@@ -13,6 +13,7 @@ import requests
 
 from conf.baseconfig import waveecharmer_Host
 from lib.firstleg.shipmentbill import ShipmentBill
+from lib.firstleg.stock_inspection import Inspection
 from lib.login import Login
 from datetime import datetime, timedelta
 
@@ -91,7 +92,7 @@ class Booking:
         获取订舱单列表
         :return:
         """
-        url = f"{waveecharmer_Host}/api/booking/page?status=4&isLoadingAdviceBillCode=false&isEmptyBookingContainerCode=true&sorts=%7B%22field%22:%22containerNo%22,%22order%22:%22desc%22%7D,%7B%22field%22:%22id%22,%22order%22:%22desc%22%7D&code={bookingcode}&pageIndex=1&pageSize=10"
+        url = f"{waveecharmer_Host}/api/booking/page?status=3,4,8&isLoadingAdviceBillCode=false&isEmptyBookingContainerCode=true&sorts=%7B%22field%22:%22containerNo%22,%22order%22:%22desc%22%7D,%7B%22field%22:%22id%22,%22order%22:%22desc%22%7D&code={bookingcode}&pageIndex=1&pageSize=10"
         resp = requests.get(url=url, headers=cookies)
         print("获取订舱单列表resp-----------\n" + resp.text)
         return resp
@@ -324,13 +325,16 @@ class Booking:
         """
 
         # 创建采购单返回id
-        purchaseOrderId = PurchaseOrder().create_purchaseorder_link(cookies, shopId, warehouseId, operateDivisionId,
-                                                                    purchaserId, product_code)
+        #purchaseOrderId = PurchaseOrder().create_purchaseorder_link(cookies, shopId, warehouseId, operateDivisionId,
+        #                                                            purchaserId, product_code)
+
+        inspection_data=Inspection().inspection_purchaseorder_report(cookies, shopId, warehouseId, operateDivisionId,
+                                        purchaserId, product_code)
 
         time.sleep(2)
-
+        #Inspection()
         # 获取采购单明细
-        purchaseOrderDetailId_resp = PurchaseOrder().get_purchaseorder_details(cookies, purchaseOrderId)
+        purchaseOrderDetailId_resp = PurchaseOrder().get_purchaseorder_details(cookies, inspection_data["purchaseorderid"])
         skuDetailDimensionDetails = json.loads(purchaseOrderDetailId_resp.text)["result"]["skuDetailDimensionDetails"]
 
         # 根据id获取sku明细
@@ -503,7 +507,7 @@ class Booking:
 if __name__ == '__main__':
     cookies = Login.loginWecharmer()
     # 创建订舱单
-    Booking().create_booking_link(cookies, 161, 15, 5, 303, 180, "A5-181")
+    Booking().create_booking_link(cookies, 161, 12, 5, 303, 180, "A5-181")
 
     # 创建预定舱
     #Booking().create_fba_booking_link(cookies, 161, 15, 5, 303, "李朋", "A5-181", "FBA16M9J26TK")

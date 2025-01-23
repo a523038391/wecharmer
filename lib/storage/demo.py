@@ -24,7 +24,7 @@ APP_KEY = "212b0a5a74f2a7e5"
 APP_SECRET = "3MSzbZBgHEbluiEurhC9XGxR7KJL5luH"
 
 
-def youdao_translate(text, to_lang="es"):
+def youdao_translate(text, to_lang="en"):
     """
     使用有道翻译API进行翻译
     """
@@ -48,7 +48,7 @@ def youdao_translate(text, to_lang="es"):
 
 
 # 读取Excel文件
-file_name = '导出多语言数据2024112010522524112000052.xlsx'
+file_name = '导出多语言数据2024112202055424112200051.xlsx'
 df = pd.read_excel(file_name)
 
 # 确保'Text'列是字符串类型

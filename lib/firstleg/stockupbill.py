@@ -267,6 +267,7 @@ class StockupBill:
             "operateDivisionId": operateDivisionId,
             "shipmentType": 1,
             "stockUpType": 1,
+            "operaterId": purchaserId,
             "platformEnName": "Tiktok"
         }
 
@@ -373,6 +374,8 @@ class StockupBill:
             "attachmentDetail": [],
             "remark": "备注一下",
             "operateDivisionId": operateDivisionId,
+            "stockUpType": 1,
+            "operaterId":purchaserId,
             "platformEnName": "Tiktok"
         }
 
@@ -474,10 +477,10 @@ if __name__ == '__main__':
     # StockupBill().create_stockupbill(cookies, 161, 150, 11, 5, "Tiktok")
 
     # 按件创建备货单
-    StockupBill().create_stockupbill_link_v1(cookies, 161, 150, 11, 5, 303, "A5-181")
+    #StockupBill().create_stockupbill_link_v1(cookies, 161, 150, 11, 5, 303, "A5-181")
 
 
     #按箱创建备货单
-    #StockupBill().create_stockupbill_box_link(cookies, 161, 150, 11, 5, 303, "A5-181",3)
+    StockupBill().create_stockupbill_box_link(cookies, 161, 150, 11, 5, 303, "A5-181",3)
 
 
