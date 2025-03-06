@@ -27,6 +27,8 @@ class ContainerBill:
 
         # 如果你只需要年月日，不需要时间部分，可以将其格式化为字符串
         self.formatted_date = now.strftime('%Y-%m-%d')
+        self.year = now.strftime('%Y')
+        self.month = now.strftime('%m')
 
         self.random_number = ''.join(str(random.randint(0, 9)) for _ in range(10))
 
@@ -103,6 +105,16 @@ class ContainerBill:
         print("生成报关合同resp-----------\n" + resp.text)
         return resp
 
+    def create_declarationdiscount(self, cookies, payload):
+        """
+        生成折扣
+        :return:
+        """
+        url = f"{waveecharmer_Host}/api/firstleginfrastructure/declarationdiscount"
+        resp = requests.post(url=url, headers=cookies, json=payload)
+        print("生成折扣resp-----------\n" + resp.text)
+        return resp
+
     def get_declaration_contract(self, cookies, containerBillid):
         """
         查询生成报关合同维度
@@ -142,7 +154,6 @@ class ContainerBill:
         resp = requests.post(url=url, headers=cookies, json=payload)
         print("填写报关单号resp-----------\n" + resp.text)
         return resp
-
 
     def get_conservancy_declaration(self, cookies, containerBillid):
         """
@@ -230,7 +241,21 @@ class ContainerBill:
             }
         }
 
-        ContainerBill().create_declaration_contract(cookies, declaration_contract_payload)
+        print(declaration_contract_payload)
+
+        declaration_contract_resp = ContainerBill().create_declaration_contract(cookies, declaration_contract_payload)
+        declaration_contract_result = json.loads(declaration_contract_resp.text)
+        if "未获取" in declaration_contract_result["errorMessage"]:
+            declarationdiscount_payload = {
+                "year": self.year,
+                "month": self.month,
+                "companyId": customsDeclarationSubId,
+                "discount": 0.5
+            }
+            ContainerBill().create_declarationdiscount(cookies,declarationdiscount_payload)
+            ContainerBill().create_declaration_contract(cookies, declaration_contract_payload)
+
+
 
         # 获取出口日期
         export_date_resp = ContainerBill().get_conservancy_export_date(cookies, containerBill_data["containerBillid"])
@@ -255,9 +280,9 @@ class ContainerBill:
         ContainerBill().create_conservancy_export_date(cookies, containerBill_data["containerBillid"],
                                                        export_date_payload)
 
-        #获取报告单号
-        conservancy_result=ContainerBill().get_conservancy_declaration(cookies, containerBill_data["containerBillid"])
-        declarationContractId=json.loads(conservancy_result.text)["result"][0]["id"]
+        # 获取报告单号
+        conservancy_result = ContainerBill().get_conservancy_declaration(cookies, containerBill_data["containerBillid"])
+        declarationContractId = json.loads(conservancy_result.text)["result"][0]["id"]
 
         # 填写报关单号
         conservancy_payload = [
@@ -266,7 +291,8 @@ class ContainerBill:
                 "declarationContractId": declarationContractId
             }
         ]
-        ContainerBill().create_conservancy_declaration(cookies, containerBill_data["containerBillid"],conservancy_payload)
+        ContainerBill().create_conservancy_declaration(cookies, containerBill_data["containerBillid"],
+                                                       conservancy_payload)
 
         # 清关维护
         conservancy_payload = {
@@ -483,12 +509,12 @@ if __name__ == '__main__':
     count = 0
     while count < 1:
         ContainerBill().booking_deliverybill_link(cookies, 507, 162, 15, "恒丰仓库", 5, 303, "李朋", 189, 502, 3,
-                                                  "A5-181")
+                                                  "A5-154")
         print("这是第 {} 次循环".format(count + 1))
         count += 1
 
     # 订舱单-装柜列表
-    #ContainerBill().booking_deliverybill_link(cookies, 507, 161, 15, "恒丰仓库", 5, 303, "李朋", 12, 502, 3, "A5-181")
+    # ContainerBill().booking_deliverybill_link(cookies, 507, 161, 15, "恒丰仓库", 5, 303, "李朋", 12, 502, 3, "A5-181")
 
     # 备货单-按件-货柜列表
     # #ContainerBill().stockupbill_containerBill_link(cookies, 502, 2, 161, 150, "李朋自营仓", 5, 303, "李朋", 11, 502, 3,

@@ -47,6 +47,16 @@ class Product:
         print("上传产品附件resp-----------\n" + resp.text)
         return resp
 
+    def sellersku_new(self, cookies, payload):
+        """
+        建立映射
+        :return:
+        """
+        url = f"{waveecharmer_Host}/api/product/sellersku/new"
+        resp = requests.post(url=url, headers=cookies, json=payload)
+        print("建立映射resp-----------\n" + resp.text)
+        return resp
+
     def query_sku_byids(self, cookies, id):
         """
         根据id查询sku信息
@@ -138,7 +148,7 @@ class Product:
         print("创建产品唯一码resp-----------\n" + resp.text)
         return resp
 
-    def create_product_link(self, cookies, developDivisionId, developerId):
+    def create_product_link(self, cookies, developDivisionId, developerId, shopId, operateDivisionId):
         """
         创建产品链路
         :param developDivisionId:开发事业部id
@@ -377,7 +387,7 @@ class Product:
                     "useImageSource": 2,
                     "code": product_code + "-B-B-100",
                     "oldCode": "",
-                    "cnName": "卡皮巴拉-大小-100cm-"+self.formatted_date,
+                    "cnName": "卡皮巴拉-大小-100cm-" + self.formatted_date,
                     "status": 2,
                     "longX": 55,
                     "longY": 55,
@@ -465,12 +475,80 @@ class Product:
 
         Product().product_file(cookies, file_payload)
 
+        # 创建映射
+
+        product_resp = Product().query_spulist(cookies, product_list_payload)
+        product_result = json.loads(product_resp.text)["result"]["items"][0]["skus"]
+        print(product_result)
+
+        for sku in product_result:
+            sellersku_payload = {
+                "shopId": shopId,
+                "fnSku": sku["code"],
+                "code": sku["code"] + "-seller",
+                "brandId": 6,
+                "operateDivisionId": operateDivisionId,
+                "operaterId": developerId,
+                "isMultiple": False,
+                "skus": [
+                    {
+                        "skuId": sku["id"],
+                        "amount": 1
+                    }
+                ]
+            }
+
+            Product().sellersku_new(cookies, sellersku_payload)
         print(product_data)
 
         return product_data
+
+    # 创建映射关系
+    def sellersku_link(self, cookies,shopId, developerId, operateDivisionId, product_code):
+        # 查询sku信息
+        product_list_payload = {
+            "entityInfoType": 1,
+            "sorts": [
+                {
+                    "field": "code",
+                    "order": "asc"
+                }
+            ],
+            "code": product_code,
+            "pageIndex": 1,
+            "pageSize": 10
+        }
+
+        # 创建映射
+
+        product_resp = Product().query_spulist(cookies, product_list_payload)
+        product_result = json.loads(product_resp.text)["result"]["items"][0]["skus"]
+        print(product_result)
+
+        for sku in product_result:
+            sellersku_payload = {
+                "shopId": shopId,
+                "fnSku": sku["code"],
+                "code": sku["code"] + "-seller",
+                "brandId": 6,
+                "operateDivisionId": operateDivisionId,
+                "operaterId": developerId,
+                "isMultiple": False,
+                "skus": [
+                    {
+                        "skuId": sku["id"],
+                        "amount": 1
+                    }
+                ]
+            }
+
+            Product().sellersku_new(cookies, sellersku_payload)
 
 
 if __name__ == '__main__':
     cookies = Login.loginWecharmer()
     # Product().query_skulist(cookies, "LIPENG456-B-P")
-    Product().create_product_link(cookies, 2, 303)
+    # Product().create_product_link(cookies, 2, 303,161,5)
+
+    # 创建映射
+    Product().sellersku_link(cookies,161,303,5,"A5-154")

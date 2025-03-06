@@ -276,7 +276,7 @@ class StockupBill:
 
         # 获取装箱库存明细平铺箱贴聚合数据分页
 
-        packingstock_spread_page_resp = Stock().get_packingstock_spread_page(cookies, shopId, operateDivisionId,
+        packingstock_spread_page_resp = Stock().get_packingstock_spread_page(cookies, shopId, operateDivisionId,warehouseId,
                                                                              product_code)
         packingstock_spread_page_result = json.loads(packingstock_spread_page_resp.text)["result"]
         stockUpBillDetail = []

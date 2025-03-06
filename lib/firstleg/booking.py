@@ -504,10 +504,15 @@ class Booking:
         return bookingid_from_fba
 
 
+
+
+
+
+
 if __name__ == '__main__':
     cookies = Login.loginWecharmer()
     # 创建订舱单
-    Booking().create_booking_link(cookies, 161, 12, 5, 303, 180, "A5-181")
+    Booking().create_booking_link(cookies, 161, 15, 5, 303, 180, "A5-181")
 
     # 创建预定舱
     #Booking().create_fba_booking_link(cookies, 161, 15, 5, 303, "李朋", "A5-181", "FBA16M9J26TK")

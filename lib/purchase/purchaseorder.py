@@ -418,7 +418,11 @@ class PurchaseOrder:
             "supplierOpeningBank": "广州银行",
             "chargePerson": "小飞",
             "chargePersonMobile": "17620865451",
-            "address": "Detail Address"
+            "address": "Detail Address",
+            "developDivisionId": get_applypurchase_result["developDivisionId"],
+            "productGroupId": get_applypurchase_result["productGroupId"],
+            "developDivisionName": get_applypurchase_result["developDivisionName"],
+            "productGroupName": get_applypurchase_result["productGroupName"]
         }
 
         for i in range(5):
@@ -496,7 +500,7 @@ class PurchaseOrder:
 if __name__ == '__main__':
     cookies = Login.loginWecharmer()
     # 创建常规采购单
-    PurchaseOrder().create_purchaseorder_link(cookies, 161, 15, 5, 303, "A5-181")
+    PurchaseOrder().create_purchaseorder_link(cookies, 161, 150, 5, 303, "A5-181")
 
     # 创建备货采购单
     # PurchaseOrder().create_stock_purchaseorder_link(cookies, 161, 15, 5, 303, "李朋", "A5-181")

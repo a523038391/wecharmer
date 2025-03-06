@@ -11,6 +11,7 @@ import time
 import requests
 
 from conf.baseconfig import waveecharmer_Host
+from lib.container.arrangecontainerbill import ArrangeContainerBill
 from lib.firstleg.booking import Booking
 from lib.login import Login
 from datetime import datetime, timedelta
@@ -270,6 +271,130 @@ class Inspection:
         bookingid_from_fba = Booking().create_booking_from_fba_link(cookies, booking_data["bookingid"])
 
         return bookingid_from_fba
+
+    def create_arrangecontainer_inspection_link(self,cookies,arrangecontainerid,purchaserId):
+
+        # 获取订舱单明细
+        alreadycontainer_Detail_resp = ArrangeContainerBill().get_alreadycontainer_items(cookies, arrangecontainerid)
+        alreadycontainer_Detail_result = json.loads(alreadycontainer_Detail_resp.text)["result"]
+
+        # 创建验货申请
+        items = []
+        supplierId=""
+        bookingBillCode=""
+
+        for Detail in alreadycontainer_Detail_result:
+
+            if Detail["deliveryWarehouseType"]==5:
+                item_dict = {
+                    "purchaseOrderId": Detail["purchaseOrderId"],
+                    "skuId": Detail["skuId"]
+                }
+                supplierId=Detail["supplierId"]
+                bookingBillCode=Detail["alreadyContainerBillCode"]
+
+                items.append(item_dict)
+            else:
+                continue
+
+        inspection_payload = {
+            "code": "",
+            "name": "",
+            "requireType": 1,
+            "bookingBillId": arrangecontainerid,
+            "requireDate": self.formatted_date,
+            "supplierId": supplierId,
+            "remark": "",
+            "bookingBillCode": bookingBillCode,
+            "attachments": [],
+            "sourceBillCategory": 607,
+            "items": items
+        }
+
+        inspection_resp = Inspection().create_inspection(cookies, inspection_payload)
+        inspectionid = json.loads(inspection_resp.text)["result"]
+
+        # 提交验货申请
+        Inspection().inspection_submit(cookies, inspectionid)
+
+        # 指派验货员
+        Inspection().inspection_assign(cookies, inspectionid, purchaserId)
+
+        # 查询验货申请单详情
+        inspection_items_resp = Inspection().get_inspection_items(cookies, inspectionid)
+        inspection_items_result = json.loads(inspection_items_resp.text)["result"]
+
+        # 查询验货单列表
+        url = f"{waveecharmer_Host}/api/inspection/require/page?status=2&sorts=%7B%22field%22:%22id%22,%22order%22:%22desc%22%7D&bookingBillCode={bookingBillCode}&pageIndex=1&pageSize=10"
+        print(url)
+        inspection_list_resp = Inspection().get_inspection_list(cookies, url)
+        inspection_list_result = json.loads(inspection_list_resp.text)["result"]
+
+
+        # 创建验货报告
+        requireItemIdObj = {}
+        packagedStockItems = []
+        boxSizeItems = []
+        for item, booking in zip(inspection_items_result, alreadycontainer_Detail_result):
+
+            if booking["deliveryWarehouseType"] == 5:
+                requireItemIdObj[f"{item['purchaseOrderCode']}-{item['skuCode']}"] = item["id"]
+                packagedStockItem_dict = {
+                    "purchaseOrderId": item["purchaseOrderId"],
+                    "skuId": item["skuId"],
+                    "packagedQuantity": item["requireQuantity"]
+                }
+
+                boxSizeItem_dict = {
+                    "requireItemId": item["id"],
+                    "ctnLongX": booking["boxLength"],
+                    "ctnLongY": booking["boxWidth"],
+                    "ctnLongZ": booking["boxHeight"],
+                    "ctnVolume": booking["ctnVolume"],
+                    "ctnNetWeight": booking["ctnNetWeight"],
+                    "totalCtnVolume": booking["totalVolumeWithBox"],
+                    "ctnGrossWeight": booking["ctnGrossWeight"],
+                    "totalCtnGrossWeight": booking["totalGrossWithBox"],
+                    "totalGrossWeight": booking["totalGrossWithBox"]
+                }
+                packagedStockItems.append(packagedStockItem_dict)
+                boxSizeItems.append(boxSizeItem_dict)
+
+
+            else:
+                continue
+
+        inspection_report_payload = {
+            "code": "",
+            "supplierName": inspection_list_result["items"][0]["supplierName"],
+            "supplierId": inspection_list_result["items"][0]["supplierId"],
+            "inspectorName": inspection_list_result["items"][0]["inspectorName"],
+            "requireType": inspection_list_result["items"][0]["requireType"],
+            "bookingBillCode": inspection_list_result["items"][0]["bookingBillCode"],
+            "selectCode": inspection_list_result["items"][0]["code"],
+            "reportDate": self.formatted_date,
+            "requireId": inspection_list_result["items"][0]["id"],
+            "conclusion": 1,
+            "remark": None,
+            "attachments": [],
+            "requireItemIdObj": requireItemIdObj,
+            "item": {
+                "inspectionWay": 1,
+                "qualifiedQuantity": None,
+                "defectQuantity": None
+            },
+            "packagedStockItems": packagedStockItems,
+            "boxSizeItems": boxSizeItems
+        }
+        inspection_report_resp = Inspection().create_inspection_report(cookies, inspection_report_payload)
+        inspection_report_id = json.loads(inspection_report_resp.text)["result"]
+
+        # 送审
+        Inspection().inspection_askapprove(cookies, inspection_report_id)
+
+
+
+
 
 
 if __name__ == '__main__':

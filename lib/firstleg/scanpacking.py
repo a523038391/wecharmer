@@ -190,6 +190,42 @@ class ScanPacking:
         return shipmentbilldata
 
 
+    #已排柜备货单拣货装箱
+    def arrangecontainer_stockupbill_scanpacking_box_link(self, cookies, sourceType, stockUpBillId,sourceCode,
+
+                                         purchaserId, purchaserName):
+
+        # 打印
+        Printpickingbill().print_link(cookies, sourceType, stockUpBillId,
+                                      sourceCode, purchaserId, purchaserName)
+
+        # 扫描单号并茨取单据信息
+        scan_billcode_resp = ScanPacking().scan_billcode(cookies, sourceCode)
+        scan_billcode_result = json.loads(scan_billcode_resp.text)["result"]
+
+        # 装箱
+
+        for item in scan_billcode_result["packingStockList"]:
+            packingbybox_payload = {
+                "sourceType": sourceType,
+                "sourceId": stockUpBillId,
+                "sourceCode": sourceCode,
+                "packingStockModel": item
+            }
+            ScanPacking().scanpacking_packingbybox(cookies, packingbybox_payload)
+
+        # 提交装箱审核
+        ScanPacking().submit_scanpacking(cookies, sourceType, stockUpBillId,
+                                         sourceCode)
+
+        # 装箱审核
+        ScanPacking().process_scanpacking(cookies, sourceType, stockUpBillId,
+                                          sourceCode)
+
+
+
+
+
     def stockupbill_scanpacking_box_link(self, cookies, sourceType, shopId, warehouseId, targetWarehouseId,
                                      operateDivisionId,
                                      purchaserId, purchaserName, product_code,quantity):
@@ -333,14 +369,14 @@ if __name__ == '__main__':
     # ScanPacking().scan_billcode(cookies, "BH24061900005")
     # ScanPacking().packing_scanpacking(cookies, 1, "724", "BH24061900004", "LIPENG456-B-P")
     #发货单按箱装箱-审核
-    ScanPacking().shipmentbill_scanpacking_link(cookies, 1, 128, 135, 5, 162, 303, "李朋",
-                                                     "A5-181", 3, "FBA16M9J26TK")
+    #ScanPacking().shipmentbill_scanpacking_link(cookies, 1, 128, 135, 5, 162, 303, "李朋",
+    #                                                 "A5-181", 3, "FBA16M9J26TK")
     #备货单按件装箱-审核
     #ScanPacking().stockupbill_scanpacking_link(cookies,2,161,177,11,5,303,"李朋","A5-181")
 
 
     #备货单按箱装箱-审核
-    #ScanPacking().stockupbill_scanpacking_box_link(cookies,2,161,177,11,5,303,"李朋","A5-181",3)
+    ScanPacking().stockupbill_scanpacking_box_link(cookies,2,161,177,11,5,303,"李朋","A5-181",3)
 
 
     #备货单按件装箱-审核

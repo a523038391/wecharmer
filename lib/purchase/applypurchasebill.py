@@ -268,7 +268,10 @@ class ApplyPurchaseBill:
             "warehouseType": 2,
             "transportationTypeId": 18,
             "transportationTypeName": None,
-            "stockInType": None
+            "stockInType": None,
+            "developDivisionId":2,
+            "productGroupId":11
+
         }
         print(applypurchasebill_payload)
         applypurchasebill_resp = ApplyPurchaseBill().create_applypurchasebill(cookies, applypurchasebill_payload)

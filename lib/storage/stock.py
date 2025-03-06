@@ -107,12 +107,12 @@ class Stock:
         print("获取装箱库存分页列表resp-----------\n" + resp.text)
         return resp
 
-    def get_packingstock_spread_page(self, cookies,shopId,operateDivisionId, product_code):
+    def get_packingstock_spread_page(self, cookies,shopId,operateDivisionId,warehouseId, product_code):
         """
         获取装箱库存明细平铺箱贴聚合数据分页
         :return:
         """
-        url = f"{waveecharmer_Host}/api/packingstock/spread/page?shopIds={shopId}&operateDivisionId={operateDivisionId}&isGetSpread=true&isIncludeSellerSku=true&isHideZero=true&sorts=%7B%22field%22:%22id%22,%22order%22:%22desc%22%7D&productCode={product_code}&pageIndex=1&pageSize=100"
+        url = f"{waveecharmer_Host}/api/packingstock/spread/page?shopIds={shopId}&operateDivisionId={operateDivisionId}&warehouseIds={warehouseId}&isGetSpread=true&isIncludeSellerSku=true&isHideZero=true&sorts=%7B%22field%22:%22id%22,%22order%22:%22desc%22%7D&productCode={product_code}&pageIndex=1&pageSize=100"
         resp = requests.get(url=url, headers=cookies)
         print("获取装箱库存明细平铺箱贴聚合数据分页resp-----------\n" + resp.text)
         return resp
@@ -328,6 +328,13 @@ class Stock:
 if __name__ == '__main__':
     cookies = Login.loginWecharmer()
 
-    #Stock().purchase_order_link(cookies, 161, 150, 5, 303, "A5-181")
     # Stock().get_batchstocks(cookies,5452,161,150)
-    Stock().purchase_order_box_link(cookies, 161, 1, 5, 303, "A5-181")
+
+    count = 0
+    while count < 10:
+        #Stock().purchase_order_box_link(cookies, -1, 195, -1, 303, "A5-181")
+        Stock().purchase_order_link(cookies, 161, 195, 5, 303, "A5-266")
+
+
+        print("这是第 {} 次循环".format(count + 1))
+        count += 1

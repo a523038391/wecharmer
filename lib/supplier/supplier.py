@@ -51,6 +51,18 @@ class Supplier:
         return resp
 
 
+    def get_supplierinventory_page1(self, cookies,supplierInventoryWarehouse,shopId,operateDivisionId,warehouseId,purchaseOrderCode):
+        """
+        获取供应商库存分页
+        :return:
+        """
+        url = f"{waveecharmer_Host}/api/supplierinventory/page?supplierInventoryWarehouse={supplierInventoryWarehouse}&isHideAvailableZero=true&shopIds={shopId}&operateDivisionIds={operateDivisionId}&isContainSpu=true&warehouseIds={warehouseId}&sorts=%7B%22field%22:%22id%22,%22order%22:%22desc%22%7D&purchaseOrderCodes=%22{purchaseOrderCode}%22&pageIndex=1&pageSize=10"
+        resp = requests.get(url=url, headers=cookies)
+        print("获取供应商库存分页resp-----------\n" + resp.text)
+        print(url)
+        return resp
+
+
     def submit_supplierstockin(self, cookies, id):
         """
         提交工厂入库单
@@ -104,7 +116,9 @@ class Supplier:
                     "skuId": itme["skuId"],
                     "stockInQuantity": itme["purchaseQuantity"],
                     "purchaseOrderId": itme["purchaseOrderId"],
-                    "id": None
+                    "id": None,
+                    "warehouseId":  purchaseOrder_items[0]["warehouseId"],
+                    "warehouseName": purchaseOrder_items[0]["warehouseName"]
                 }
             itmes.append(originorderinfo_dict)
 
@@ -120,6 +134,8 @@ class Supplier:
             "originOrderCode": purchaseOrder_items[0]["purchaseOrderCode"],
             "scanCode": "",
             "sourceBillId": purchaseOrder_items[0]["id"],
+            "warehouseId": purchaseOrder_items[0]["warehouseId"],
+            "warehouseName": purchaseOrder_items[0]["warehouseName"],
             "isSubmit": False,
             "items":
                 itmes
