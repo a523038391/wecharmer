@@ -461,6 +461,6 @@ if __name__ == '__main__':
     #                                        "A5-181", 3, "FBA16M9J26TK")
 
     #发货单-按件
-    ShipmentBill().fba_shipmentbill_link_v1(cookies, 150, 135, 5, 162, 303,
+    ShipmentBill().fba_shipmentbill_link_v1(cookies, 150, 189, 5, 162, 303,
                                              "A5-181",  "FBA16M9J26TK")
 

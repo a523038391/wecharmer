@@ -135,8 +135,8 @@ class WaitContainerBill:
                     "productSticker": item["fnSku"],
                     "sellerSku": item["sellerSkuCode"],
                     "waitContainerQuantity": int(item["boxStickerNo"][-1])*quantity,
-                    "totalVolumeWithBox": int(item["totalCtnVolume"])*quantity,
-                    "totalGrossWithBox": int(item["totalCtnVolume"])*quantity
+                    "totalVolumeWithBox": float(item["totalCtnVolume"])*quantity,
+                    "totalGrossWithBox": float(item["totalCtnVolume"])*quantity
                 }
                 items_dict.update(item)
                 items.append(items_dict)
@@ -192,8 +192,125 @@ class WaitContainerBill:
             "id": waitContainer_result
         }
         WaitContainerBill().create_waitcontainerbill_manual(cookies, manual_payload)
+        time.sleep(5)
 
         return waitContainer_result
+
+
+    def create_waitContainer_supplier_fba_link(self, cookies, shopId, warehouseId, operateDivisionId, purchaserId,
+                                           product_code):
+        """
+        创建待排柜链路-供应商仓-平台仓
+        :param targetWarehouseSettingId:预计发往区域
+        :param targetWarehouseType:仓库类型
+        :param transportationTypeId:运输方式
+        :param positionSelection:选仓
+        :param isNeedFnSku:是否需要箱贴
+        :param warehouseType:仓库类型
+        :param overseasWarehouseListingMethod:按箱 按件
+        """
+
+
+        inspection_data = Inspection().inspection_purchaseorder_report(cookies, shopId, warehouseId, operateDivisionId,
+                                                                       purchaserId, product_code)
+
+        # 获取采购单明细
+        purchaseOrderDetailId_resp = PurchaseOrder().get_purchaseorder_details(cookies,
+                                                                               inspection_data["purchaseorderid"])
+        skuDetailDimensionDetails = json.loads(purchaseOrderDetailId_resp.text)["result"]["skuDetailDimensionDetails"]
+
+        # 根据采购单id查询库存
+
+
+        supplierinventory_resp = Supplier().get_supplierinventory_page1(cookies, 3, shopId,
+                                                                        warehouseId, skuDetailDimensionDetails[0][
+                                                                            "purchaseOrderCode"])
+        supplierinventory_result = json.loads(supplierinventory_resp.text)["result"]["items"]
+        print(supplierinventory_result)
+
+        items = []
+
+        for skuDetail in supplierinventory_result:
+            # 查询产品对外关系分页
+            sellersku_payload = {
+                "shopIds": [
+                    shopId
+                ],
+                "skuCodes": [
+                    skuDetail["skuCode"]
+                ],
+                "isMatch": True,
+                "pageSize": 100,
+                "pageIndex": 1,
+                "isEmptyFnSku": False,
+                "operateDivisionId": operateDivisionId
+            }
+
+            sellersku_resp = Product().sellersku_page(cookies, sellersku_payload)
+            sellersku_result = json.loads(sellersku_resp.text)["result"]["items"][0]
+
+            items_dict = {
+                "boxLength": skuDetail["boxGauge"]["ctnLongX"],
+                "boxWidth": skuDetail["boxGauge"]["ctnLongY"],
+                "boxHeight": skuDetail["boxGauge"]["ctnLongZ"],
+                "ctnVolume": skuDetail["boxGauge"]["ctnVolume"],
+                "ctnGrossWeight": skuDetail["boxGauge"]["ctnNetWeight"],
+                "ctnNetWeight": skuDetail["boxGauge"]["ctnGrossWeight"],
+                "oneBoxLoadQuantity": int(skuDetail["boxGauge"]["ctnQuantity"]),
+                "boxQuantity": int(
+                    int(skuDetail["inventoryAvailableQuantity"]) / int(skuDetail["boxGauge"]["ctnQuantity"])),
+                "productCode": skuDetail["skuCode"],
+                "packageSticker": None,
+                "productSticker": sellersku_result["fnSku"],
+                "sellerSku": sellersku_result["code"],
+                "waitContainerQuantity": int(skuDetail["inventoryAvailableQuantity"]),
+                "totalVolumeWithBox": float(
+                    float(skuDetail["boxGauge"]["ctnVolume"]) * int(skuDetail["inventoryAvailableQuantity"]) / int(
+                        skuDetail["boxGauge"]["ctnQuantity"])),
+                "totalGrossWithBox": float(skuDetail["boxGauge"]["ctnGrossWeight"]) * int(
+                    skuDetail["inventoryAvailableQuantity"]) / int(skuDetail["boxGauge"]["ctnQuantity"])
+            }
+            items_dict.update(skuDetail)
+            print(items_dict)
+
+            items.append(items_dict)
+
+        # 创建待排柜单
+        booking_payload = {
+            "waitContainerBillCode": None,
+            "operateDivisionId": operateDivisionId,
+            "operateDivisionName": "运营青蛙椅事业部",
+            "targetWarehouseSettingId": 2,
+            "expectedDeliveryDate": self.formatted_date,
+            "expectedWarehouseDate": self.formatted_date_eta,
+            "targetWarehouseId": None,
+            "targetWarehouseName": None,
+            "targetWarehouseType": 3,
+            "transportationTypeId": 18,
+            "positionSelection": 0,
+            "transportationTypeName": "第三方普船整柜",
+            "inStorageType": None,
+            "isQuickReturn": False,
+            "developType": None,
+            "shopId": shopId,
+            "shopAccount": "LIPENG_US",
+            "operaterId": purchaserId,
+            "operaterName": "李朋",
+            "isNeedFnSku": "true",
+            "warehouseId": warehouseId,
+            "warehouseType": 5,
+            "warehouseName": "恒丰仓库",
+            "remark": "备注一下吧",
+            "deliveryDayAddition": 0,
+            "targetWarehouseSettingName": "美西",
+            "details": items
+        }
+
+        waitContainer_resp = WaitContainerBill().create_waitcontainerbill(cookies, booking_payload)
+        waitContainer_result = json.loads(waitContainer_resp.text)["result"]
+
+        return waitContainer_result
+
 
 
 
@@ -203,7 +320,7 @@ class WaitContainerBill:
                                            targetWarehouseId,
                                            product_code):
         """
-        创建待排柜链路-供应商仓
+        创建待排柜链路-供应商仓-海外仓
         :param targetWarehouseSettingId:预计发往区域
         :param targetWarehouseType:仓库类型
         :param transportationTypeId:运输方式
@@ -225,7 +342,10 @@ class WaitContainerBill:
 
         # 根据采购单id查询库存
 
-        supplierinventory_resp = Supplier().get_supplierinventory_page1(cookies, 3, shopId, operateDivisionId,
+
+        print("ces1")
+
+        supplierinventory_resp = Supplier().get_supplierinventory_page1(cookies, 3, shopId,
                                                                         warehouseId, skuDetailDimensionDetails[0][
                                                                             "purchaseOrderCode"])
         supplierinventory_result = json.loads(supplierinventory_resp.text)["result"]["items"]
@@ -267,10 +387,10 @@ class WaitContainerBill:
                 "productSticker": sellersku_result["fnSku"],
                 "sellerSku": sellersku_result["code"],
                 "waitContainerQuantity": int(skuDetail["inventoryAvailableQuantity"]),
-                "totalVolumeWithBox": int(
+                "totalVolumeWithBox": float(
                     float(skuDetail["boxGauge"]["ctnVolume"]) * int(skuDetail["inventoryAvailableQuantity"]) / int(
                         skuDetail["boxGauge"]["ctnQuantity"])),
-                "totalGrossWithBox": int(skuDetail["boxGauge"]["ctnGrossWeight"]) * int(
+                "totalGrossWithBox": float(skuDetail["boxGauge"]["ctnGrossWeight"]) * int(
                     skuDetail["inventoryAvailableQuantity"]) / int(skuDetail["boxGauge"]["ctnQuantity"])
             }
             items_dict.update(skuDetail)
@@ -328,6 +448,9 @@ if __name__ == '__main__':
     cookies = Login.loginWecharmer()
 
     # 海外仓创建待排柜
-    WaitContainerBill().create_waitContainer_supplier_link(cookies, 161, 15, 5, 303, 189, "A5-181")
+   #WaitContainerBill().create_waitContainer_supplier_link(cookies, 161, 15, 5, 303, 189, "A5-181")
+
+    # 平台仓创建待排柜
+    WaitContainerBill().create_waitContainer_supplier_fba_link(cookies, 162, 15, 5, 303, "A5-181")
 
     #WaitContainerBill().create_waitContainer_entity_link(cookies,161,150,5,303,189,"A5-181",3)

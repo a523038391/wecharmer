@@ -7,6 +7,7 @@
 # @Project : wecharmer
 import json
 import math
+import time
 from datetime import datetime, timedelta
 
 import requests
@@ -275,6 +276,7 @@ class Inspection:
         Inspection().inspection_askapprove(cookies, inspection_report_id)
 
         inspection_data = {"purchaseorderid": supplierstockin_data["purchaseOrderId"]}
+        time.sleep(2)
 
         return inspection_data
 
@@ -283,7 +285,7 @@ if __name__ == '__main__':
     cookies = Login.loginWecharmer()
 
     # 备货验货
-    Inspection().inspection_purchaseorder_report(cookies, 161, 15, 5, 303, "A5-181")
+    Inspection().inspection_purchaseorder_report(cookies, 162, 15, 2, 303, "A5-181")
 
 
 

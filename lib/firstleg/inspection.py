@@ -230,6 +230,7 @@ class Inspection:
         Inspection().inspection_askapprove(cookies, inspection_report_id)
 
         booking_data = {"bookingid": bookingid, "bookingcode": bookingcode}
+        time.sleep(4)
 
         return booking_data
 
@@ -391,6 +392,8 @@ class Inspection:
 
         # 送审
         Inspection().inspection_askapprove(cookies, inspection_report_id)
+
+        time.sleep(2)
 
 
 

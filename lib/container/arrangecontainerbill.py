@@ -122,6 +122,11 @@ class ArrangeContainerBill:
         print("获取已排柜明细resp-----------\n" + resp.text)
         return resp
 
+
+
+
+
+
     def create_arrangecontainer_link(self, cookies, shopId, warehouseId, warehouseId_entity, operateDivisionId,
                                      purchaserId,
                                      targetWarehouseId,

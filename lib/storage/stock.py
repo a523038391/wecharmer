@@ -277,7 +277,7 @@ class Stock:
         Stock().purchase_order_review(cookies, purchase_order_id)
 
         # 强制等待
-        time.sleep(2)
+        time.sleep(7)
 
         # 扫描装箱
         count = 0
@@ -332,8 +332,8 @@ if __name__ == '__main__':
 
     count = 0
     while count < 10:
-        #Stock().purchase_order_box_link(cookies, -1, 195, -1, 303, "A5-181")
-        Stock().purchase_order_link(cookies, 161, 195, 5, 303, "A5-266")
+        Stock().purchase_order_box_link(cookies, 232, 220, 2, 303, "A5-181")
+        #Stock().purchase_order_link(cookies, 161, 150, 2, 303, "H6-118")
 
 
         print("这是第 {} 次循环".format(count + 1))

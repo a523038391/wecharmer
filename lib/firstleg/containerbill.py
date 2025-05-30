@@ -46,7 +46,7 @@ class ContainerBill:
         return resp
 
     def create_containerbill(self, cookies, sourceBillType, vouchingClerkId, vouchingClerkName,
-                             deliveryBillId):
+                             deliveryBillIds):
         """
         创建货柜列表
         :param ladingNo:提单号
@@ -58,6 +58,9 @@ class ContainerBill:
         :return:
         """
         url = f"{waveecharmer_Host}/api/containerbill"
+
+
+
         payload = {
             "remark": "",
             "sourceBillType": sourceBillType,
@@ -86,9 +89,7 @@ class ContainerBill:
             "freightForwardingName": None,
             "transportationTypeName": None,
             "promisedArrivalDays": 0,
-            "deliveryBillIds": [
-                deliveryBillId
-            ]
+            "deliveryBillIds": deliveryBillIds
         }
 
         resp = httpUtil.HttpUtil.make_http_request(url, "post", payload, cookies)
@@ -195,17 +196,27 @@ class ContainerBill:
         print("保存结算费用resp-----------\n" + resp.text)
         return resp
 
-    def create_containerbill_link(self, cookies, sourceCode, sourceBillType, vouchingClerkId, vouchingClerkName,
+    def create_containerbill_link(self, cookies, sourceCodes, sourceBillType, vouchingClerkId, vouchingClerkName,
                                   customsDeclarationSubId
                                   ):
+
+
         # 查询出货单
-        url = f"{waveecharmer_Host}/api/deliverybill/page?deliveryBillStates=1,2,3,4&sorts=%7B%22field%22:%22id%22,%22order%22:%22desc%22%7D&sourceCodes=%22{sourceCode}%22&pageIndex=1&pageSize=10"
-        DeliveryBill_resp = DeliveryBill().query_deliverybill(url, cookies)
-        deliveryBillId = json.loads(DeliveryBill_resp.text)['result']["items"][0]["id"]
+        deliveryBillIds=[]
+        for sourceCode in sourceCodes:
+
+            url = f"{waveecharmer_Host}/api/deliverybill/page?deliveryBillStates=1,2,3,4&sorts=%7B%22field%22:%22id%22,%22order%22:%22desc%22%7D&sourceCodes=%22{sourceCode}%22&pageIndex=1&pageSize=10"
+            DeliveryBill_resp = DeliveryBill().query_deliverybill(url, cookies)
+            deliveryBillId = json.loads(DeliveryBill_resp.text)['result']["items"][0]["id"]
+            print(deliveryBillId)
+
+            deliveryBillIds.append(deliveryBillId)
+
+
 
         # 创建货柜列表
         ContainerBill_resp = ContainerBill().create_containerbill(cookies, sourceBillType, vouchingClerkId,
-                                                                  vouchingClerkName, deliveryBillId)
+                                                                  vouchingClerkName, deliveryBillIds)
         containerBillCode = json.loads(ContainerBill_resp.text)['result']["containerBillCode"]
         containerBillid = json.loads(ContainerBill_resp.text)['result']['id']
 
@@ -245,7 +256,9 @@ class ContainerBill:
 
         declaration_contract_resp = ContainerBill().create_declaration_contract(cookies, declaration_contract_payload)
         declaration_contract_result = json.loads(declaration_contract_resp.text)
-        if "未获取" in declaration_contract_result["errorMessage"]:
+
+        if declaration_contract_result["errorMessage"]!= None:
+
             declarationdiscount_payload = {
                 "year": self.year,
                 "month": self.month,
@@ -430,7 +443,8 @@ class ContainerBill:
                                                                          purchaserId, purchaserName, product_code)
 
         # 创建货柜列表
-        containerBill_data = ContainerBill().create_containerbill_link(cookies, stockupbilldata["sourceCode"],
+        sourceCodes=[stockupbilldata["sourceCode"]]
+        containerBill_data = ContainerBill().create_containerbill_link(cookies, sourceCodes,
                                                                        sourceBillType, purchaserId,
                                                                        purchaserName, customsDeclarationSubId)
 
@@ -494,12 +508,13 @@ class ContainerBill:
         url = f"{waveecharmer_Host}/api/stockupbill/page?stockUpBillStatuses=1,2,3,5,6&sorts=%7B%22field%22:%22id%22,%22order%22:%22desc%22%7D&bookingBillCode={booking_data['bookingcode']}&pageIndex=1&pageSize=10"
         sourceCode_resp = StockupBill().query_stockupbill(url, cookies)
         sourceCode = json.loads(sourceCode_resp.text)["result"]["items"][0]["stockUpBillCode"]
+        sourceCodes=[sourceCode]
 
         # 创建货柜列表
-        containerBill_data = ContainerBill().create_containerbill_link(cookies, sourceCode, sourceBillType, purchaserId,
-                                                                       purchasername, customsDeclarationSubId
-                                                                       )
-        return containerBill_data
+        #containerBill_data = ContainerBill().create_containerbill_link(cookies, sourceCodes, sourceBillType, purchaserId,
+        #                                                               purchasername, customsDeclarationSubId
+        #                                                               )
+        #return containerBill_data
 
 
 if __name__ == '__main__':
@@ -509,7 +524,7 @@ if __name__ == '__main__':
     count = 0
     while count < 1:
         ContainerBill().booking_deliverybill_link(cookies, 507, 162, 15, "恒丰仓库", 5, 303, "李朋", 189, 502, 3,
-                                                  "A5-154")
+                                                  "A5-181")
         print("这是第 {} 次循环".format(count + 1))
         count += 1
 

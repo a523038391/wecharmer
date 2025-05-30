@@ -45,6 +45,7 @@ class PurchaseOrder:
         :return:
         """
         url = f"{waveecharmer_Host}/api/purchaseorder/details/fullall?purchaseOrderIds={purchaseorderid}"
+
         resp = requests.get(url=url, headers=cookies)
         print("获取采购单明细resp-----------\n" + resp.text)
         return resp
@@ -368,7 +369,7 @@ class PurchaseOrder:
                                                                                 purchaserId,
                                                                                 product_code)
 
-        time.sleep(2)
+        time.sleep(20)
 
         #获取申购单详情
         get_applypurchase_resp=ApplyPurchaseBill().get_applypurchasebill(cookies,applypurchasebillid)
@@ -377,7 +378,7 @@ class PurchaseOrder:
         # 创建采购单
         purchaseorder_payload = {
             "companyId": 2,
-            "supplierId": 6,
+            "supplierId": 113,
             "warehouseId": warehouseId,
             "purchaseOrderType": 1,
             "productDevelopType": 2,
@@ -493,6 +494,8 @@ class PurchaseOrder:
         # 送审
         payload = {}
         PurchaseOrder().purchaseorder_review(purchaseorderid, cookies, payload)
+        time.sleep(2)
+
 
         return purchaseorderid
 
@@ -500,7 +503,7 @@ class PurchaseOrder:
 if __name__ == '__main__':
     cookies = Login.loginWecharmer()
     # 创建常规采购单
-    PurchaseOrder().create_purchaseorder_link(cookies, 161, 150, 5, 303, "A5-181")
+    PurchaseOrder().create_purchaseorder_link(cookies, 162, 15, 5, 303, "A5-181")
 
     # 创建备货采购单
     # PurchaseOrder().create_stock_purchaseorder_link(cookies, 161, 15, 5, 303, "李朋", "A5-181")

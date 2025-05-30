@@ -193,12 +193,12 @@ if __name__ == '__main__':
     cookies = Login.loginWecharmer()
     # LoadingAdvice().loadingadvice_link(cookies,507,"150","李朋自营仓",1158,"DC24090600036")
     # 发货单按箱发货-装柜
-    LoadingAdvice().shipmentbill_loadingadvice_link(cookies, 505, 1, 150, "李朋自营仓", 135, 5, 162, 303, "李朋",
-                                                    "A5-181", 3, "FBA16M9J26TK")
+    #LoadingAdvice().shipmentbill_loadingadvice_link(cookies, 505, 1, 150, "李朋自营仓", 135, 5, 162, 303, "李朋",
+    #                                                "A5-181", 3, "FBA16M9J26TK")
     # 备货单按件发货-装柜
-    #LoadingAdvice().stockupbill_loadingadvice_link(cookies, 502, 2, 161, 150, "李朋自营仓", 11, 5, 303, "李朋",
-    #                                                "A5-181")
+    #LoadingAdvice().stockupbill_loadingadvice_link(cookies, 502, 2, 161, 150, "李朋自营仓", 11, 2, 303, "李朋",
+    #                                                "A5-271")
 
     # 发货单按件发货-装柜
-    #LoadingAdvice().shipmentbill_loadingadvice_a_link(cookies, 505, 1, 150, "李朋自营仓", 135, 5, 162, 303, "李朋",
-    #                                                  "A5-181", "FBA16M9J26TK")
+    LoadingAdvice().shipmentbill_loadingadvice_a_link(cookies, 505, 1, 150, "李朋自营仓", 135, 5, 162, 303, "李朋",
+                                                      "A5-181", "FBA16M9J26TK")

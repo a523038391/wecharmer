@@ -51,15 +51,18 @@ class Supplier:
         return resp
 
 
-    def get_supplierinventory_page1(self, cookies,supplierInventoryWarehouse,shopId,operateDivisionId,warehouseId,purchaseOrderCode):
+    def get_supplierinventory_page1(self, cookies,supplierInventoryWarehouse,shopId,warehouseId,purchaseOrderCode):
         """
         获取供应商库存分页
         :return:
         """
-        url = f"{waveecharmer_Host}/api/supplierinventory/page?supplierInventoryWarehouse={supplierInventoryWarehouse}&isHideAvailableZero=true&shopIds={shopId}&operateDivisionIds={operateDivisionId}&isContainSpu=true&warehouseIds={warehouseId}&sorts=%7B%22field%22:%22id%22,%22order%22:%22desc%22%7D&purchaseOrderCodes=%22{purchaseOrderCode}%22&pageIndex=1&pageSize=10"
-        resp = requests.get(url=url, headers=cookies)
-        print("获取供应商库存分页resp-----------\n" + resp.text)
+        url = f"{waveecharmer_Host}/api/supplierinventory/page?supplierInventoryWarehouse={supplierInventoryWarehouse}&isHideAvailableZero=true&isContainSpu=true&warehouseIds={warehouseId}&sorts=%7B%22field%22:%22id%22,%22order%22:%22desc%22%7D&shopIds={shopId}&purchaseOrderCodes=%22{purchaseOrderCode}%22&pageIndex=1&pageSize=10"
         print(url)
+        print(cookies)
+        time.sleep(5)
+        resp = requests.get(url=url, headers=cookies)
+
+        print("获取供应商库存分页resp-----------\n" + resp.text)
         return resp
 
 
@@ -90,7 +93,7 @@ class Supplier:
                                                                     purchaserId, product_code)
 
 
-        time.sleep(2)
+        time.sleep(15)
 
         # 获取采购单明细
         purchaseOrderDetailId_resp = PurchaseOrder().get_purchaseorder_details(cookies, purchaseOrderId)
@@ -145,6 +148,8 @@ class Supplier:
 
         supplierstockin_resp=Supplier().create_supplierstockin(cookies, supplierstockin_payload)
         supplierstockin_result=json.loads(supplierstockin_resp.text)["result"]
+
+
 
 
         #提交
