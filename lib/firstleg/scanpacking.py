@@ -369,14 +369,14 @@ if __name__ == '__main__':
     # ScanPacking().scan_billcode(cookies, "BH24061900005")
     # ScanPacking().packing_scanpacking(cookies, 1, "724", "BH24061900004", "LIPENG456-B-P")
     #发货单按箱装箱-审核
-    #ScanPacking().shipmentbill_scanpacking_link(cookies, 1, 128, 135, 5, 162, 303, "李朋",
-    #                                                 "A5-181", 3, "FBA16M9J26TK")
+    ScanPacking().shipmentbill_scanpacking_link(cookies, 1, 128, 135, 5, 162, 303, "李朋",
+                                                     "A5-181", 3, "FBA16M9J26TK")
     #备货单按件装箱-审核
     #ScanPacking().stockupbill_scanpacking_link(cookies,2,161,177,11,5,303,"李朋","A5-181")
 
 
     #备货单按箱装箱-审核
-    ScanPacking().stockupbill_scanpacking_box_link(cookies,2,161,177,11,5,303,"李朋","A5-181",3)
+    #ScanPacking().stockupbill_scanpacking_box_link(cookies,2,161,177,11,5,303,"李朋","A5-181",3)
 
 
     #备货单按件装箱-审核

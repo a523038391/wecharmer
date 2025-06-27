@@ -277,7 +277,7 @@ class Stock:
         Stock().purchase_order_review(cookies, purchase_order_id)
 
         # 强制等待
-        time.sleep(7)
+        time.sleep(20)
 
         # 扫描装箱
         count = 0

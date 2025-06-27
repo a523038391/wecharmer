@@ -441,6 +441,8 @@ class Booking:
 
         Booking().repairshipping_booking(cookies, repairshipping_payload)
 
+        time.sleep(15)
+
         # 审核单据
         reviewshipping_payload = {
             "id": bookingid,

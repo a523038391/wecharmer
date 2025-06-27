@@ -41,8 +41,37 @@ class ArrangeContainerLink:
         self.formatted_date_eta = new_date_eta.strftime("%Y-%m-%d %H:%M:%S")
 
 
+    #平台仓排柜全链路
+    def arrangecontainer_inspection_Fba_link(self, cookies,sourceBillCategory, shopId, warehouseId,warehouseName, warehouseId_entity, operateDivisionId,
+                                         purchaserId,purchaserName,
+                                         targetWarehouseId,
+                                         product_code, quantity,fbaShipmentCode):
 
-    #海外仓创建已排柜-验货
+        #创建已排柜
+        arrangecontainer_data = ArrangeContainerBill().create_arrangecontainer_fba_link(cookies, shopId, warehouseId, warehouseId_entity, operateDivisionId,
+                                         purchaserId,
+                                         targetWarehouseId,
+                                         product_code, quantity,fbaShipmentCode)
+
+        # 创建验货申请报告
+        Inspection().create_arrangecontainer_inspection_link(cookies, arrangecontainer_data["id"], purchaserId)
+
+        # 备货单-拣货装箱
+        ScanPacking().arrangecontainer_stockupbill_scanpacking_box_link(cookies, arrangecontainer_data["sourceType"],
+                                                                        arrangecontainer_data["stockUpBillId"],
+                                                                        arrangecontainer_data["sourceCode"],
+
+                                                                        purchaserId, purchaserName)
+
+        # 装柜通知
+
+        LoadingAdvice().arrangecontainer_loadingadvice_link(cookies, sourceBillCategory, warehouseId, warehouseName,
+                                                            arrangecontainer_data["id"],
+                                                            arrangecontainer_data["arrangecontainercode"])
+
+
+
+    #海外仓创建已排柜-全链路
     def arrangecontainer_inspection_oversea_link(self, cookies,sourceBillCategory, shopId, warehouseId,warehouseName, warehouseId_entity, operateDivisionId,
                                      purchaserId,purchaserName,
                                      targetWarehouseId,
@@ -53,6 +82,8 @@ class ArrangeContainerLink:
                                      purchaserId,
                                      targetWarehouseId,
                                      product_code, quantity)
+
+
 
         #创建验货申请报告
         Inspection().create_arrangecontainer_inspection_link(cookies,arrangecontainer_data["id"],purchaserId)
@@ -93,4 +124,9 @@ class ArrangeContainerLink:
 
 if __name__ == '__main__':
     cookies = Login.loginWecharmer()
-    ArrangeContainerLink().arrangecontainer_inspection_oversea_link(cookies,"607" ,161, 15,"恒丰仓库" ,150, 5, 303, "李朋",189, "A5-181", 3,3)
+
+    #排柜海外仓全链路
+    #ArrangeContainerLink().arrangecontainer_inspection_oversea_link(cookies,"607" ,161, 15,"恒丰仓库" ,150, 5, 303, "李朋",189, "A5-181", 3,3)
+
+    #排柜平台仓全链路
+    ArrangeContainerLink().arrangecontainer_inspection_Fba_link(cookies,"607" ,162, 15,"恒丰仓库" ,150, 5, 303, "李朋",119, "A5-181", 3,"FBA16M9J26TK")

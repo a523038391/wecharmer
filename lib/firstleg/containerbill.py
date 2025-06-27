@@ -318,17 +318,15 @@ class ContainerBill:
         # 保存暂估费用
         estimated_batch_payload = [
             {
-                "costType": 1,
-                "amount": 6,
+                "costType": 3,
+                "amount": 4,
                 "currency": "CNY",
-                "toCnyRate": 1,
-                "toCnyAmount": 6,
-                "settlementAgent": 1,
-                "settlementAgentId": 3,
-                "settlementAgentName": "车队3",
+                "toCnyAmount": 4,
+                "settlementAgent": 3,
+                "settlementAgentId": 2,
                 "apportionmentMethod": 2,
-                "isEffective": False,
-                "containerBillCode": containerBillCode
+                "reconciliationStatus": 1,
+                "settlementAgentName": "货代名称"
             }
         ]
         ContainerBill().create_conservancy_estimated_batch(cookies, containerBill_data["containerBillid"],
@@ -523,7 +521,7 @@ if __name__ == '__main__':
     # ContainerBill().create_containerbill_link(cookies,"BH24062000052",502,303,"李朋","3453353534")
     count = 0
     while count < 1:
-        ContainerBill().booking_deliverybill_link(cookies, 507, 162, 15, "恒丰仓库", 5, 303, "李朋", 189, 502, 3,
+        ContainerBill().booking_deliverybill_link(cookies, 507, 161, 15, "恒丰仓库", 5, 303, "李朋", 189, 502, 3,
                                                   "A5-181")
         print("这是第 {} 次循环".format(count + 1))
         count += 1

@@ -285,7 +285,7 @@ if __name__ == '__main__':
     cookies = Login.loginWecharmer()
 
     # 备货验货
-    Inspection().inspection_purchaseorder_report(cookies, 162, 15, 2, 303, "A5-181")
+    Inspection().inspection_purchaseorder_report(cookies, 161, 15, 5, 303, "A5-181")
 
 
 
