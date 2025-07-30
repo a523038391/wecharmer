@@ -377,8 +377,8 @@ class PurchaseOrder:
 
         # 创建采购单
         purchaseorder_payload = {
-            "companyId": 31,
-            "supplierId": 6,
+            "companyId": 2,
+            "supplierId": 113,
             "warehouseId": warehouseId,
             "purchaseOrderType": 1,
             "productDevelopType": 2,

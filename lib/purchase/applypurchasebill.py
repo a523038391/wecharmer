@@ -308,7 +308,7 @@ if __name__ == '__main__':
     cookies = Login.loginWecharmer()
 
     # 创建常规申购单
-    ApplyPurchaseBill().create_applypurchasebill_link(cookies, 161, 5 ,303,"A5-181")
+    ApplyPurchaseBill().create_applypurchasebill_link(cookies, 161, 5 ,303,"S7621-202")
 
     # 创建备货申购单
     #ApplyPurchaseBill().create_stock_applypurchasebill_link(cookies, 161, 5,303,"李朋","A5-181")

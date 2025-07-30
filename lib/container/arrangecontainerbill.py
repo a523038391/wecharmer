@@ -72,8 +72,6 @@ class ArrangeContainerBill:
         print("分页查询已排柜单resp-----------\n" + resp.text)
         return resp
 
-
-
     def submit_arrangecontainerbill(self, cookies, payload):
         """
         提交已排柜
@@ -83,7 +81,6 @@ class ArrangeContainerBill:
         resp = requests.put(url=url, headers=cookies, json=payload)
         print("提交已排柜resp-----------\n" + resp.text)
         return resp
-
 
     def submit_confirmallocate(self, cookies, payload):
         """
@@ -115,6 +112,16 @@ class ArrangeContainerBill:
         print("海外仓补充货件resp-----------\n" + resp.text)
         return resp
 
+    def markattachmentcomplete_arrangecontainerbill(self, cookies, payload):
+        """
+        附件标记已完成
+        :return:
+        """
+        url = f"{waveecharmer_Host}/api/arrangecontainer/alreadycontainer/attachment/markattachmentcomplete"
+        resp = requests.put(url=url, headers=cookies, json=payload)
+        print("附件标记已完成resp-----------\n" + resp.text)
+        return resp
+
     def get_transitwarehousedelivery(self, cookies, id):
         """
         获取中转仓发货管理
@@ -135,8 +142,7 @@ class ArrangeContainerBill:
         print("获取已排柜明细resp-----------\n" + resp.text)
         return resp
 
-
-    def get_allocateshipment(self, cookies, id,fbaShipmentCode):
+    def get_allocateshipment(self, cookies, id, fbaShipmentCode):
         """
         分配货件计算
         :return:
@@ -147,12 +153,10 @@ class ArrangeContainerBill:
         print("分配货件计算resp-----------\n" + resp.text)
         return resp
 
-
-
     def create_arrangecontainer_fba_link(self, cookies, shopId, warehouseId, warehouseId_entity, operateDivisionId,
                                          purchaserId,
                                          targetWarehouseId,
-                                         product_code, quantity,fbaShipmentCode):
+                                         product_code, quantity, fbaShipmentCode):
 
         """
         创建已排柜链路-平台仓
@@ -198,7 +202,8 @@ class ArrangeContainerBill:
             "pageSize": 10,
         }
 
-        waitContainer_page_detail_resp1=WaitContainerBill().page_waitcontainerbill_detail(cookies,waitContainer_page_detail_payload1)
+        waitContainer_page_detail_resp1 = WaitContainerBill().page_waitcontainerbill_detail(cookies,
+                                                                                            waitContainer_page_detail_payload1)
 
         waitContainer_page_detail_result1 = json.loads(waitContainer_page_detail_resp1.text)["result"]["items"]
 
@@ -217,14 +222,11 @@ class ArrangeContainerBill:
             items_dict.update(item)
             alreadyContainerBillItems.append(items_dict)
 
-
-
         # 查询待排柜明细
 
         waitContainer_items_resp2 = WaitContainerBill().get_waitcontainerbill_items(cookies,
                                                                                     waitContainerid2)
         waitContainer_items_result2 = json.loads(waitContainer_items_resp2.text)["result"]
-
 
         print(waitContainer_items_result2)
 
@@ -250,7 +252,6 @@ class ArrangeContainerBill:
 
         waitContainer_page_detail_result2 = json.loads(waitContainer_page_detail_resp2.text)["result"]["items"]
 
-
         for item in waitContainer_page_detail_result2:
             items_dict = {
                 "spuCode": item["productCode"],
@@ -264,14 +265,8 @@ class ArrangeContainerBill:
             items_dict.update(item)
             alreadyContainerBillItems.append(items_dict)
 
-
         print("已排柜明细")
         print(alreadyContainerBillItems)
-
-
-
-
-
 
         # 创建已排柜
         arrangecontainer_payload = {
@@ -335,18 +330,17 @@ class ArrangeContainerBill:
 
         ArrangeContainerBill().submit_arrangecontainerbill(cookies, submit_payload)
 
+        # 补充货件
 
-        #补充货件
-
-        allocateshipment_resp=ArrangeContainerBill().get_allocateshipment(cookies,page_result["id"],fbaShipmentCode)
+        allocateshipment_resp = ArrangeContainerBill().get_allocateshipment(cookies, page_result["id"], fbaShipmentCode)
         allocateshipment_result = json.loads(allocateshipment_resp.text)["result"]
 
-        confirmallocate_payload={
+        confirmallocate_payload = {
             "id": page_result["id"],
             "allocateShipmentData": allocateshipment_result
         }
 
-        ArrangeContainerBill().submit_confirmallocate(cookies,confirmallocate_payload)
+        ArrangeContainerBill().submit_confirmallocate(cookies, confirmallocate_payload)
 
         # 获取中转仓发货管理
 
@@ -378,8 +372,6 @@ class ArrangeContainerBill:
                                  }
 
         return arrangecontainer_data
-
-
 
     def create_arrangecontainer_link(self, cookies, shopId, warehouseId, warehouseId_entity, operateDivisionId,
                                      purchaserId,
@@ -598,6 +590,11 @@ class ArrangeContainerBill:
 
         time.sleep(2)
 
+        # 附件标记完成
+        markattachmentcomplete_payload = {"id": page_result["id"], "attachmentCompleteStatus": 1}
+        ArrangeContainerBill().markattachmentcomplete_arrangecontainerbill(cookies,markattachmentcomplete_payload)
+
+
         # 生成备货单
         createshipmentorstockupbill_payload = {
             "id": page_result["id"],
@@ -625,7 +622,7 @@ class ArrangeContainerBill:
 if __name__ == '__main__':
     cookies = Login.loginWecharmer()
     # 海外仓创建待已排柜
-    # ArrangeContainerBill().create_arrangecontainer_link(cookies, 161, 15, 150, 5, 303, 189, "A5-181", 3)
+    ArrangeContainerBill().create_arrangecontainer_link(cookies, 161, 15, 150, 5, 303, 189, "A5-181", 3)
 
     # 平台仓创建已排柜
-    ArrangeContainerBill().create_arrangecontainer_fba_link(cookies, 162, 15, 150, 5, 303, 119, "A5-181", 3,"FBA16M9J26TK")
+    # ArrangeContainerBill().create_arrangecontainer_fba_link(cookies, 162, 15, 150, 5, 303, 119, "A5-181", 3,"FBA16M9J26TK")

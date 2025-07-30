@@ -457,10 +457,10 @@ if __name__ == '__main__':
     # ShipmentBill().fba_shipmentbill_link(cookies, "FBA16K8TWW9P", 150, 135, 2, 122, "B-XF2-00A-D-9-0125-QGR-XS", 1002)
 
     #发货单-按箱
-    #ShipmentBill().fba_shipmentbill_box_link(cookies, 150, 135, 5, 162, 303,
-    #                                        "A5-181", 3, "FBA16M9J26TK")
+    ShipmentBill().fba_shipmentbill_box_link(cookies, 150, 135, 5, 162, 303,
+                                            "A5-181", 3, "FBA16M9J26TK")
 
     #发货单-按件
-    ShipmentBill().fba_shipmentbill_link_v1(cookies, 150, 189, 5, 162, 303,
-                                             "A5-181",  "FBA16M9J26TK")
+    #ShipmentBill().fba_shipmentbill_link_v1(cookies, 150, 189, 5, 162, 303,
+    #                                         "A5-181",  "FBA16M9J26TK")
 

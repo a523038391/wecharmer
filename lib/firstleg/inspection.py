@@ -83,6 +83,35 @@ class Inspection:
         print("查询验货单列表resp-----------\n" + resp.text)
         return resp
 
+    def inspection_setstatus(self, cookies, url):
+        """
+        附件下载
+        :return:
+        """
+        resp = requests.put(url=url, headers=cookies)
+        print("附件下载resp-----------\n" + resp.text)
+        return resp
+
+    def create_inspection_factory(self, cookies, payload):
+        """
+        工厂质检
+        :return:
+        """
+        url = f"{waveecharmer_Host}/api/inspection/factory/quality"
+        resp = requests.post(url=url, headers=cookies, json=payload)
+        print("工厂质检resp-----------\n" + resp.text)
+        return resp
+
+    def create_inspection_audit(self, cookies, payload):
+        """
+        qc审核
+        :return:
+        """
+        url = f"{waveecharmer_Host}/api/inspection/quality/audit"
+        resp = requests.post(url=url, headers=cookies, json=payload)
+        print("qc审核resp-----------\n" + resp.text)
+        return resp
+
     def create_inspection_report(self, cookies, payload):
         """
         创建验货报告
@@ -102,8 +131,6 @@ class Inspection:
         resp = requests.put(url=url, headers=cookies)
         print("送审resp-----------\n" + resp.text)
         return resp
-
-
 
     def inspection_report(self, cookies, bookingid, purchaserId):
         """
@@ -225,6 +252,43 @@ class Inspection:
         }
         inspection_report_resp = Inspection().create_inspection_report(cookies, inspection_report_payload)
         inspection_report_id = json.loads(inspection_report_resp.text)["result"]
+        time.sleep(2)
+
+
+
+        # 附件下载
+        url = f"{waveecharmer_Host}/api/inspection/setstatus/waitquality/{inspection_report_id}"
+        print(url)
+        Inspection().inspection_setstatus(cookies,url)
+        time.sleep(2)
+
+        # 工厂质检
+        inspection_factory_payload = {
+            "reportId": inspection_report_id,
+            "reportDate": self.formatted_date,
+            "inspectionWay": 1,
+            "qualifiedQuantity": 0,
+            "defectQuantity": 0,
+            "factoryQualityAttachments": [
+                {
+                    "name": "eeb88387bfc51b95-8d419d544cbf259b-4b49a49ed03a6361260360524adf3592.jpg",
+                    "url": "https://wecharmer-erp-test.obs.cn-east-3.myhuaweicloud.com/ProhibitDeletion/1753693796523_db5bd244_25072800000470.jpg"
+                }
+            ],
+            "otherQualityInspectionAttachments": []
+        }
+        Inspection().create_inspection_factory(cookies, inspection_factory_payload)
+
+        # qc审核
+
+        inspection_factory_audit = {
+            "reportId": inspection_report_id,
+            "reportConclusion": 1,
+            "auditRemark": None,
+            "auditDate": self.formatted_date
+        }
+
+        Inspection().create_inspection_audit(cookies,inspection_factory_audit)
 
         # 送审
         Inspection().inspection_askapprove(cookies, inspection_report_id)
@@ -273,7 +337,7 @@ class Inspection:
 
         return bookingid_from_fba
 
-    def create_arrangecontainer_inspection_link(self,cookies,arrangecontainerid,purchaserId):
+    def create_arrangecontainer_inspection_link(self, cookies, arrangecontainerid, purchaserId):
 
         # 获取订舱单明细
         alreadycontainer_Detail_resp = ArrangeContainerBill().get_alreadycontainer_items(cookies, arrangecontainerid)
@@ -281,18 +345,18 @@ class Inspection:
 
         # 创建验货申请
         items = []
-        supplierId=""
-        bookingBillCode=""
+        supplierId = ""
+        bookingBillCode = ""
 
         for Detail in alreadycontainer_Detail_result:
 
-            if Detail["deliveryWarehouseType"]==5:
+            if Detail["deliveryWarehouseType"] == 5:
                 item_dict = {
                     "purchaseOrderId": Detail["purchaseOrderId"],
                     "skuId": Detail["skuId"]
                 }
-                supplierId=Detail["supplierId"]
-                bookingBillCode=Detail["alreadyContainerBillCode"]
+                supplierId = Detail["supplierId"]
+                bookingBillCode = Detail["alreadyContainerBillCode"]
 
                 items.append(item_dict)
             else:
@@ -330,7 +394,6 @@ class Inspection:
         print(url)
         inspection_list_resp = Inspection().get_inspection_list(cookies, url)
         inspection_list_result = json.loads(inspection_list_resp.text)["result"]
-
 
         # 创建验货报告
         requireItemIdObj = {}
@@ -390,24 +453,54 @@ class Inspection:
         inspection_report_resp = Inspection().create_inspection_report(cookies, inspection_report_payload)
         inspection_report_id = json.loads(inspection_report_resp.text)["result"]
 
+        # 附件下载
+        url = f"{waveecharmer_Host}/api/inspection/setstatus/waitquality/{inspection_report_id}"
+        print(url)
+        Inspection().inspection_setstatus(cookies, url)
+        time.sleep(2)
+
+        # 工厂质检
+        inspection_factory_payload = {
+            "reportId": inspection_report_id,
+            "reportDate": self.formatted_date,
+            "inspectionWay": 1,
+            "qualifiedQuantity": 0,
+            "defectQuantity": 0,
+            "factoryQualityAttachments": [
+                {
+                    "name": "eeb88387bfc51b95-8d419d544cbf259b-4b49a49ed03a6361260360524adf3592.jpg",
+                    "url": "https://wecharmer-erp-test.obs.cn-east-3.myhuaweicloud.com/ProhibitDeletion/1753693796523_db5bd244_25072800000470.jpg"
+                }
+            ],
+            "otherQualityInspectionAttachments": []
+        }
+        Inspection().create_inspection_factory(cookies, inspection_factory_payload)
+
+        # qc审核
+
+        inspection_factory_audit = {
+            "reportId": inspection_report_id,
+            "reportConclusion": 1,
+            "auditRemark": None,
+            "auditDate": self.formatted_date
+        }
+
+        Inspection().create_inspection_audit(cookies, inspection_factory_audit)
+
         # 送审
         Inspection().inspection_askapprove(cookies, inspection_report_id)
 
         time.sleep(15)
 
 
-
-
-
-
 if __name__ == '__main__':
     cookies = Login.loginWecharmer()
 
     # 备货验货
-    #Inspection().inspection_purchaseorder_report(cookies, 161, 15, 5, 303, "A5-181")
+    # Inspection().inspection_purchaseorder_report(cookies, 161, 15, 5, 303, "A5-181")
 
     # 订舱单尾期验货
-    Inspection().create_inspection_link(cookies, 161, 15, 5, 303, 12, "A5-181")
+    Inspection().create_inspection_link(cookies, 161, 15, 5, 303, 12, "A5-181",)
     # 预定舱尾期验货
     # Inspection().create_fba_inspection_link(cookies, 161, 15, 5, 303, "李朋", "A5-181","FBA16M9J26TK")
 
