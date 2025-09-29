@@ -378,7 +378,7 @@ class PurchaseOrder:
         # 创建采购单
         purchaseorder_payload = {
             "companyId": 2,
-            "supplierId": 113,
+            "supplierId": 112,
             "warehouseId": warehouseId,
             "purchaseOrderType": 1,
             "productDevelopType": 2,
@@ -463,7 +463,7 @@ class PurchaseOrder:
 
         # 创建采购单明细
         purchaseOrderDetails = []
-        unitPrice = 100
+        unitPrice = 100.33
         for item in get_applypurchasebill_result["skuDetailDimensionDetails"]:
             unitPrice += 50
             purchaseOrderDetails_dict = {

@@ -201,7 +201,7 @@ class ApplyPurchaseBill:
         purchaseBillDetails = []
         quantity = 0
         for item in get_applypurchasebill_result["skuAndMonthYearDetailDimensionDetails"]:
-            quantity += 100
+            quantity += 10
             purchaseBillDetails_dict = {
                 "productId": item["productId"],
                 "skuId": item["skuId"],
@@ -249,6 +249,18 @@ class ApplyPurchaseBill:
         product_resp = Product().query_spulist(cookies, product_list_payload)
         product_result = json.loads(product_resp.text)["result"]["items"][0]["skus"]
 
+        # 创建申购单明细
+        purchaseBillDetails = []
+        quantity = 0
+        for item in product_result:
+            quantity += 100
+            purchaseBillDetails_dict = {
+                "productId": item["productId"],
+                "skuId": item["id"],
+                "quantity": quantity
+            }
+            purchaseBillDetails.append(purchaseBillDetails_dict)
+
         # 创建常规申购单
         applypurchasebill_payload = {
             "shopId": shopId,
@@ -270,31 +282,22 @@ class ApplyPurchaseBill:
             "transportationTypeName": None,
             "stockInType": None,
             "developDivisionId":2,
-            "productGroupId":11
+            "productGroupId":11,
+            "purchaseBillDetails":purchaseBillDetails
 
         }
         print(applypurchasebill_payload)
         applypurchasebill_resp = ApplyPurchaseBill().create_applypurchasebill(cookies, applypurchasebill_payload)
         applypurchasebillid = json.loads(applypurchasebill_resp.text)["result"]["id"]
 
-        # 创建申购单明细
-        purchaseBillDetails = []
-        quantity = 0
-        for item in product_result:
-            quantity += 100
-            purchaseBillDetails_dict = {
-                "productId": item["productId"],
-                "skuId": item["id"],
-                "quantity": quantity
-            }
-            purchaseBillDetails.append(purchaseBillDetails_dict)
 
-        applypurchasebill_details_payload = {
-            "applyPurchaseBillId": applypurchasebillid,
-            "purchaseBillDetails": purchaseBillDetails
-        }
 
-        ApplyPurchaseBill().create_applypurchasebill_details(cookies, applypurchasebill_details_payload)
+        #applypurchasebill_details_payload = {
+        #    "applyPurchaseBillId": applypurchasebillid,
+        #    "purchaseBillDetails": purchaseBillDetails
+        #}
+
+        #ApplyPurchaseBill().create_applypurchasebill_details(cookies, applypurchasebill_details_payload)
 
 
         # 送审

@@ -8,7 +8,8 @@
 
 
 import json
-from conf.baseconfig import userName, passWord, waveecharmer_Host, freightower_Host, f_userName, f_passWord
+from conf.baseconfig import userName, passWord, waveecharmer_Host, freightower_Host, f_userName, f_passWord, \
+    waveecharmer_emc_Host
 from util import httpUtil
 
 
@@ -22,6 +23,33 @@ class Login:
         :return:
         """
         url = f"{waveecharmer_Host}/api/account/login"
+        payload = {
+            "tenantName": "Wecharmer.Hero",
+            "account": userName,
+            "password": passWord
+        }
+
+        resp = httpUtil.HttpUtil.make_http_request(url, "post", payload, "")
+
+        if json.loads(resp.text)["code"] == 'Success':
+            cookies = {"Authorization": json.loads(resp.text)["result"]}
+            print("cookies:", cookies)
+            return cookies
+
+        else:
+            print(f"登录失败，账号{userName}密码：{passWord}")
+
+
+
+    @classmethod
+    def loginWecharmer_emc(cls):
+        """
+        登录微诚EMC获取鉴权信息
+        :param userName 账号
+        :param passWord 密码
+        :return:
+        """
+        url = f"{waveecharmer_emc_Host}/api/account/login"
         payload = {
             "tenantName": "Wecharmer.Hero",
             "account": userName,

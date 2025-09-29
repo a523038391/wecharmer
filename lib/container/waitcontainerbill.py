@@ -404,7 +404,9 @@ class WaitContainerBill:
                     float(skuDetail["boxGauge"]["ctnVolume"]) * int(skuDetail["inventoryAvailableQuantity"]) / int(
                         skuDetail["boxGauge"]["ctnQuantity"])),
                 "totalGrossWithBox": float(skuDetail["boxGauge"]["ctnGrossWeight"]) * int(
-                    skuDetail["inventoryAvailableQuantity"]) / int(skuDetail["boxGauge"]["ctnQuantity"])
+                    skuDetail["inventoryAvailableQuantity"]) / int(skuDetail["boxGauge"]["ctnQuantity"]),
+                "portId": skuDetail["shippingPorts"][0]["portId"],
+                "portName": skuDetail["shippingPorts"][0]["portName"]
             }
             items_dict.update(skuDetail)
             print("待排柜 明细")
@@ -528,7 +530,9 @@ class WaitContainerBill:
                     float(skuDetail["boxGauge"]["ctnVolume"]) * int(skuDetail["inventoryAvailableQuantity"]) / int(
                         skuDetail["boxGauge"]["ctnQuantity"])),
                 "totalGrossWithBox": float(skuDetail["boxGauge"]["ctnGrossWeight"]) * int(
-                    skuDetail["inventoryAvailableQuantity"]) / int(skuDetail["boxGauge"]["ctnQuantity"])
+                    skuDetail["inventoryAvailableQuantity"]) / int(skuDetail["boxGauge"]["ctnQuantity"]),
+                "portId": skuDetail["shippingPorts"][0]["portId"],
+                "portName": skuDetail["shippingPorts"][0]["portName"]
             }
             items_dict.update(skuDetail)
             print(items_dict)
@@ -585,13 +589,13 @@ if __name__ == '__main__':
     cookies = Login.loginWecharmer()
 
     # 海外仓创建待排柜-供应商仓
-    WaitContainerBill().create_waitContainer_supplier_link(cookies, 161, 15, 5, 303, 189, "A5-181")
+    #WaitContainerBill().create_waitContainer_supplier_link(cookies, 161, 15, 5, 303, 189, "S7621-202")
 
     # 平台仓创建待排柜-供应商仓
     #WaitContainerBill().create_waitContainer_supplier_fba_link(cookies, 162, 15, 5, 303, "A5-181")
 
     # 海外仓创建待排柜-国内仓
-    #WaitContainerBill().create_waitContainer_entity_link(cookies,161,150,5,303,189,"A5-181",3)
+    WaitContainerBill().create_waitContainer_entity_link(cookies,161,150,5,303,189,"A5-181",3)
 
     # 平台仓创建待排柜-国内仓
     #WaitContainerBill().create_waitContainer_entity_fba_link(cookies,162,150,5,303,"A5-181",3)

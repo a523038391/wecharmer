@@ -56,7 +56,7 @@ class Supplier:
         获取供应商库存分页
         :return:
         """
-        url = f"{waveecharmer_Host}/api/supplierinventory/page?supplierInventoryWarehouse={supplierInventoryWarehouse}&isHideAvailableZero=true&isContainSpu=true&warehouseIds={warehouseId}&sorts=%7B%22field%22:%22id%22,%22order%22:%22desc%22%7D&shopIds={shopId}&purchaseOrderCodes=%22{purchaseOrderCode}%22&pageIndex=1&pageSize=10"
+        url = f"{waveecharmer_Host}/api/supplierinventory/page?supplierInventoryWarehouse={supplierInventoryWarehouse}&isHideAvailableZero=true&isContainSpu=true&warehouseIds={warehouseId}&sorts=%7B%22field%22:%22id%22,%22order%22:%22desc%22%7D&shopIds={shopId}&purchaseOrderCodes=%22{purchaseOrderCode}%22&pageIndex=1&pageSize=100"
         print(url)
         print(cookies)
         time.sleep(5)

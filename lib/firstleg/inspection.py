@@ -351,14 +351,19 @@ class Inspection:
         for Detail in alreadycontainer_Detail_result:
 
             if Detail["deliveryWarehouseType"] == 5:
-                item_dict = {
-                    "purchaseOrderId": Detail["purchaseOrderId"],
-                    "skuId": Detail["skuId"]
-                }
+
+                requireQuantity={"requireQuantity":Detail["quantity"]}
+
+                Detail.update(requireQuantity)
+
+                #item_dict = {
+                #   "purchaseOrderId": Detail["purchaseOrderId"],
+                #    "skuId": Detail["skuId"]
+                #}
                 supplierId = Detail["supplierId"]
                 bookingBillCode = Detail["alreadyContainerBillCode"]
 
-                items.append(item_dict)
+                items.append(Detail)
             else:
                 continue
 
