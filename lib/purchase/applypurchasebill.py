@@ -310,8 +310,14 @@ class ApplyPurchaseBill:
 if __name__ == '__main__':
     cookies = Login.loginWecharmer()
 
+    count = 0
+    while count < 2:
+        ApplyPurchaseBill().create_applypurchasebill_link(cookies, 161, 5 ,303,"S7621-202")
+        print("这是第 {} 次循环".format(count + 1))
+        count += 1
+
     # 创建常规申购单
-    ApplyPurchaseBill().create_applypurchasebill_link(cookies, 161, 5 ,303,"S7621-202")
+    #ApplyPurchaseBill().create_applypurchasebill_link(cookies, 161, 5 ,303,"S7621-202")
 
     # 创建备货申购单
     #ApplyPurchaseBill().create_stock_applypurchasebill_link(cookies, 161, 5,303,"李朋","A5-181")

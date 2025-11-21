@@ -89,10 +89,20 @@ class WaitContainerBill:
         print("选仓resp-----------\n" + resp.text)
         return resp
 
+    def waitcontainerbill_askapprove(self, cookies, waitcontainerbill_id):
+        """
+        送审
+        :return:
+        """
+        url = f"{waveecharmer_Host}/api/waitcontainerbill/ask-approval?id={waitcontainerbill_id}"
+        resp = requests.put(url=url, headers=cookies)
+        print("送审resp-----------\n" + resp.text)
+        return resp
+
 
 
     def create_waitContainer_entity_fba_link(self,cookies, shopId, warehouseId_entity, operateDivisionId, purchaserId,
-                                         product_code, quantity):
+                                         product_code, quantity,supplierId,companyId):
 
 
         """
@@ -107,7 +117,7 @@ class WaitContainerBill:
         """
         # 创建采购单按箱上架
         Stock().purchase_order_box_link(cookies, shopId, warehouseId_entity, operateDivisionId, purchaserId,
-                                        product_code)
+                                        product_code,supplierId,companyId)
 
         # 获取装箱库存明细平铺箱贴聚合数据分页
 
@@ -216,7 +226,7 @@ class WaitContainerBill:
 
     def create_waitContainer_entity_link(self, cookies, shopId, warehouseId_entity, operateDivisionId, purchaserId,
                                          targetWarehouseId,
-                                         product_code, quantity):
+                                         product_code, quantity,supplierId,companyId):
         """
         创建待排柜链路-实体仓-海外仓
         :param targetWarehouseSettingId:预计发往区域
@@ -230,7 +240,7 @@ class WaitContainerBill:
 
         # 创建采购单按箱上架
         Stock().purchase_order_box_link(cookies, shopId, warehouseId_entity, operateDivisionId, purchaserId,
-                                        product_code)
+                                        product_code,supplierId,companyId)
 
         # 获取装箱库存明细平铺箱贴聚合数据分页
 
@@ -333,7 +343,7 @@ class WaitContainerBill:
 
 
     def create_waitContainer_supplier_fba_link(self, cookies, shopId, warehouseId, operateDivisionId, purchaserId,
-                                           product_code):
+                                           product_code,supplierId,companyId):
         """
         创建待排柜链路-供应商仓-平台仓
         :param targetWarehouseSettingId:预计发往区域
@@ -347,7 +357,7 @@ class WaitContainerBill:
 
 
         inspection_data = Inspection().inspection_purchaseorder_report(cookies, shopId, warehouseId, operateDivisionId,
-                                                                       purchaserId, product_code)
+                                                                       purchaserId, product_code,supplierId,companyId)
 
         # 获取采购单明细
         purchaseOrderDetailId_resp = PurchaseOrder().get_purchaseorder_details(cookies,
@@ -457,7 +467,7 @@ class WaitContainerBill:
 
     def create_waitContainer_supplier_link(self, cookies, shopId, warehouseId, operateDivisionId, purchaserId,
                                            targetWarehouseId,
-                                           product_code):
+                                           product_code,supplierId,companyId):
         """
         创建待排柜链路-供应商仓-海外仓
         :param targetWarehouseSettingId:预计发往区域
@@ -470,7 +480,7 @@ class WaitContainerBill:
         """
 
         inspection_data = Inspection().inspection_purchaseorder_report(cookies, shopId, warehouseId, operateDivisionId,
-                                                                       purchaserId, product_code)
+                                                                       purchaserId, product_code,supplierId,companyId)
 
         time.sleep(15)
 
@@ -574,6 +584,10 @@ class WaitContainerBill:
         waitContainer_resp = WaitContainerBill().create_waitcontainerbill(cookies, booking_payload)
         waitContainer_result = json.loads(waitContainer_resp.text)["result"]
 
+        #送审
+        WaitContainerBill().waitcontainerbill_askapprove(cookies,waitContainer_result)
+        time.sleep(20)
+
         # 选仓
 
         manual_payload = {
@@ -589,14 +603,14 @@ if __name__ == '__main__':
     cookies = Login.loginWecharmer()
 
     # 海外仓创建待排柜-供应商仓
-    #WaitContainerBill().create_waitContainer_supplier_link(cookies, 161, 15, 5, 303, 189, "S7621-202")
+    WaitContainerBill().create_waitContainer_supplier_link(cookies, 161, 15, 5, 157, 189, "A5-181",6,2)
 
     # 平台仓创建待排柜-供应商仓
-    #WaitContainerBill().create_waitContainer_supplier_fba_link(cookies, 162, 15, 5, 303, "A5-181")
+    #WaitContainerBill().create_waitContainer_supplier_fba_link(cookies, 162, 15, 5, 273, "A5-181",6,2)
 
     # 海外仓创建待排柜-国内仓
-    WaitContainerBill().create_waitContainer_entity_link(cookies,161,150,5,303,189,"A5-181",3)
+    #WaitContainerBill().create_waitContainer_entity_link(cookies,161,150,5,303,189,"A5-181",3,6,2)
 
     # 平台仓创建待排柜-国内仓
-    #WaitContainerBill().create_waitContainer_entity_fba_link(cookies,162,150,5,303,"A5-181",3)
+    #WaitContainerBill().create_waitContainer_entity_fba_link(cookies,162,150,5,303,"A5-181",3,6,2)
 

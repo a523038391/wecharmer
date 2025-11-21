@@ -352,7 +352,7 @@ class PurchaseOrder:
 
         return purchaseorderids
 
-    def create_purchaseorder_link(self, cookies, shopId, warehouseId, operateDivisionId, purchaserId, product_code):
+    def  create_purchaseorder_link(self, cookies, shopId, warehouseId, operateDivisionId, purchaserId, product_code,supplierId,companyId):
         """
         创建采购单链路
         :param companyId:财务公司抬头id
@@ -377,8 +377,8 @@ class PurchaseOrder:
 
         # 创建采购单
         purchaseorder_payload = {
-            "companyId": 2,
-            "supplierId": 112,
+            "companyId": companyId,
+            "supplierId": supplierId,
             "warehouseId": warehouseId,
             "purchaseOrderType": 1,
             "productDevelopType": 2,
@@ -503,7 +503,7 @@ class PurchaseOrder:
 if __name__ == '__main__':
     cookies = Login.loginWecharmer()
     # 创建常规采购单
-    PurchaseOrder().create_purchaseorder_link(cookies, 161, 15, 5, 303, "A5-181")
+    PurchaseOrder().create_purchaseorder_link(cookies, 161, 15, 5, 303, "A5-181",6,2)
 
     # 创建备货采购单
     # PurchaseOrder().create_stock_purchaseorder_link(cookies, 161, 15, 5, 303, "李朋", "A5-181")

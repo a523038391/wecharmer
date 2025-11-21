@@ -77,7 +77,7 @@ class Supplier:
         return resp
 
     def supplierstockin_link(self, cookies, shopId, warehouseId, operateDivisionId,
-                                                                    purchaserId, product_code):
+                                                                    purchaserId, product_code,supplierId,companyId):
         """
         创建工厂入库单链路
         :param isSubmit:是否提交
@@ -90,7 +90,7 @@ class Supplier:
 
         # 创建采购单返回id
         purchaseOrderId = PurchaseOrder().create_purchaseorder_link(cookies, shopId, warehouseId, operateDivisionId,
-                                                                    purchaserId, product_code)
+                                                                    purchaserId, product_code,supplierId,companyId)
 
 
         time.sleep(15)

@@ -202,7 +202,7 @@ class Stock:
         }
         Stock().create_putonshelfbill_sku(cookies, putonshelfbill_sku_payload)
 
-    def purchase_order_box_link(self, cookies, shopId, warehouseId, operateDivisionId, purchaserId, product_code):
+    def purchase_order_box_link(self, cookies, shopId, warehouseId, operateDivisionId, purchaserId, product_code,supplierId,companyId):
         """
         创建采购单入库按箱上架链路
         :param companyId:财务公司抬头id
@@ -215,7 +215,7 @@ class Stock:
         """
         # 创建采购单返回id
         purchaseorderid = PurchaseOrder().create_purchaseorder_link(cookies, shopId, warehouseId, operateDivisionId,
-                                                                    purchaserId, product_code)
+                                                                    purchaserId, product_code,supplierId,companyId)
 
         # 根据采购单id查询详细
         get_purchaseorder_resp = PurchaseOrder().get_purchaseorder(cookies, purchaseorderid)

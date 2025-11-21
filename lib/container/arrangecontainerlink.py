@@ -123,14 +123,14 @@ class ArrangeContainerLink:
                                                  warehouseId_entity, operateDivisionId,
                                                  purchaserId, purchaserName,
                                                  targetWarehouseId,
-                                                 product_code, quantity, customsDeclarationSubId,sourceType):
+                                                 product_code, quantity, customsDeclarationSubId,sourceType ,supplierId,companyId):
         # 创建已排柜
         arrangecontainer_data = ArrangeContainerBill().create_arrangecontainer_supplier_link(cookies, shopId, warehouseId,
                                                                                     warehouseId_entity,
                                                                                     operateDivisionId,
                                                                               purchaserId,
                                                                                     targetWarehouseId,
-                                                                                    product_code, quantity)
+                                                                                    product_code, quantity,supplierId,companyId)
 
         #创建验货申请报告
         Inspection().create_arrangecontainer_inspection_link(cookies,arrangecontainer_data["id"],purchaserId)
@@ -178,6 +178,6 @@ if __name__ == '__main__':
     #ArrangeContainerLink().arrangecontainer_inspection_Fba_link(cookies,"607" ,162, 15,"恒丰仓库" ,150, 5, 303, "李朋",119, "A5-181", 3,"FBA16M9J26TK")
 
     #排柜单海外仓供应商仓-链路
-    ArrangeContainerLink().arrangecontainer_inspection_supplier_link(cookies,"607" ,161, 15,"恒丰仓库" ,150, 5, 303, "李朋",189, "S7621-202", 3,3,502)
+    ArrangeContainerLink().arrangecontainer_inspection_supplier_link(cookies,"607" ,161, 15,"恒丰仓库" ,150, 5, 303, "李朋",189, "A5-181", 3,3,502,6,2)
 
 

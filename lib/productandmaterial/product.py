@@ -548,7 +548,7 @@ class Product:
 if __name__ == '__main__':
     cookies = Login.loginWecharmer()
     # Product().query_skulist(cookies, "LIPENG456-B-P")
-    #Product().create_product_link(cookies, 2, 303,161,5)
+    Product().create_product_link(cookies, 2, 303,161,5)
 
     # 创建映射
-    Product().sellersku_link(cookies,161,303,5,"S7621-202")
+    #Product().sellersku_link(cookies,161,303,5,"S7621-202")

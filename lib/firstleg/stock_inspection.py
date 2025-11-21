@@ -102,7 +102,7 @@ class Inspection:
         return resp
 
     def inspection_purchaseorder_report(self, cookies, shopId, warehouseId, operateDivisionId,
-                                        purchaserId, product_code):
+                                        purchaserId, product_code,supplierId,companyId):
         """
         备货验货-创建验货申请报告链路
         :param requireType:收货类型
@@ -118,7 +118,7 @@ class Inspection:
 
         # 创建采购单工厂入库
         supplierstockin_data = Supplier().supplierstockin_link(cookies, shopId, warehouseId, operateDivisionId,
-                                                               purchaserId, product_code)
+                                                               purchaserId, product_code,supplierId,companyId)
 
         # 获取某个采购单的所有明细，根据采购单ds(头程订舱用)
         purchaseorder_details = PurchaseOrder().get_purchaseorder_details(cookies,
@@ -180,7 +180,7 @@ class Inspection:
                     "skuCode": item["skuCode"],
                     "requireQuantity": item["inventoryQuantity"],
                     "productSticker": sellersku_result["items"][0]["fnSku"],
-                    "ctnQuantity": query_sku_result["suppliers"][0]["ctnQuantity"],
+                     "ctnQuantity": query_sku_result["suppliers"][0]["ctnQuantity"],
                     "packageQuantity": math.floor(item["inventoryQuantity"]/query_sku_result["suppliers"][0]["ctnQuantity"]),
                     "warehouseId": warehouseId,
                     "ctnLongX": query_sku_result["suppliers"][0]["ctnLongX"],
@@ -217,7 +217,7 @@ class Inspection:
         Inspection().inspection_submit(cookies, inspectionid)
 
         # 指派验货员
-        Inspection().inspection_assign(cookies, inspectionid, purchaserId)
+        Inspection().inspection_assign(cookies, inspectionid, 303)
 
         # 查询验货单列表
         url = f"{waveecharmer_Host}/api/inspection/require/page?status=1,2,3,5,6&sorts=%7B%22field%22:%22id%22,%22order%22:%22desc%22%7D&purchaseOrderCode={supplierstockin_data["purchaseOrderCode"]}&pageIndex=1&pageSize=10"
@@ -285,7 +285,7 @@ if __name__ == '__main__':
     cookies = Login.loginWecharmer()
 
     # 备货验货
-    Inspection().inspection_purchaseorder_report(cookies, 161, 15, 5, 303, "A5-181")
+    Inspection().inspection_purchaseorder_report(cookies, 161, 15, 5, 303, "A5-292",6,2)
 
 
 

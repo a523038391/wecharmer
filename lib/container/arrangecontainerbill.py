@@ -156,7 +156,7 @@ class ArrangeContainerBill:
     def create_arrangecontainer_fba_link(self, cookies, shopId, warehouseId, warehouseId_entity, operateDivisionId,
                                          purchaserId,
                                          targetWarehouseId,
-                                         product_code, quantity, fbaShipmentCode):
+                                         product_code, quantity, fbaShipmentCode,supplierId,companyId):
 
         """
         创建已排柜链路-平台仓
@@ -171,12 +171,12 @@ class ArrangeContainerBill:
         # 创建待排柜-供应商仓
         waitContainerid1 = WaitContainerBill().create_waitContainer_supplier_fba_link(cookies, shopId, warehouseId,
                                                                                       operateDivisionId, purchaserId,
-                                                                                      product_code)
+                                                                                      product_code,supplierId,companyId)
 
         # 创建待排柜-国内仓
         waitContainerid2 = WaitContainerBill().create_waitContainer_entity_fba_link(cookies, shopId, warehouseId_entity,
                                                                                     operateDivisionId, purchaserId,
-                                                                                    product_code, quantity)
+                                                                                    product_code, quantity,supplierId,companyId)
 
         # 查询待排柜明细
 
@@ -376,21 +376,21 @@ class ArrangeContainerBill:
     def create_arrangecontainer_supplier_link(self, cookies, shopId, warehouseId, warehouseId_entity, operateDivisionId,
                                      purchaserId,
                                      targetWarehouseId,
-                                     product_code, quantity):
+                                     product_code, quantity,supplierId,companyId):
 
         # 创建待排柜-供应商仓1
 
         waitContainerid1 = WaitContainerBill().create_waitContainer_supplier_link(cookies, shopId, warehouseId,
                                                                                   operateDivisionId, purchaserId,
                                                                                   targetWarehouseId,
-                                                                                  product_code)
+                                                                                  product_code,supplierId,companyId)
 
         # 创建待排柜-供应商仓2
 
         waitContainerid2 = WaitContainerBill().create_waitContainer_supplier_link(cookies, shopId, warehouseId,
                                                                                   operateDivisionId, purchaserId,
                                                                                   targetWarehouseId,
-                                                                                  product_code)
+                                                                                  product_code,supplierId,companyId)
 
         # 查询待排柜明细
 
@@ -586,7 +586,7 @@ class ArrangeContainerBill:
     def create_arrangecontainer_link(self, cookies, shopId, warehouseId, warehouseId_entity, operateDivisionId,
                                      purchaserId,
                                      targetWarehouseId,
-                                     product_code, quantity):
+                                     product_code, quantity,supplierId,companyId):
         """
         创建已排柜链路-海外仓
         :param containerId:货柜id
@@ -603,13 +603,13 @@ class ArrangeContainerBill:
         waitContainerid1 = WaitContainerBill().create_waitContainer_supplier_link(cookies, shopId, warehouseId,
                                                                                   operateDivisionId, purchaserId,
                                                                                   targetWarehouseId,
-                                                                                  product_code)
+                                                                                  product_code,supplierId,companyId)
 
         # 创建待排柜-国内仓
         waitContainerid2 = WaitContainerBill().create_waitContainer_entity_link(cookies, shopId, warehouseId_entity,
                                                                                 operateDivisionId, purchaserId,
                                                                                 targetWarehouseId,
-                                                                                product_code, quantity)
+                                                                                product_code, quantity,supplierId,companyId)
 
         # 查询待排柜明细
 
@@ -832,12 +832,12 @@ class ArrangeContainerBill:
 if __name__ == '__main__':
     cookies = Login.loginWecharmer()
     # 海外仓创建待已排柜-混合仓
-    #ArrangeContainerBill().create_arrangecontainer_link(cookies, 161, 15, 150, 5, 303, 189, "A5-181", 3)
+    ArrangeContainerBill().create_arrangecontainer_link(cookies, 161, 15, 150, 5, 303, 189, "A5-181", 3,6,2)
 
     # 平台仓创建已排柜-混合仓
-    # ArrangeContainerBill().create_arrangecontainer_fba_link(cookies, 162, 15, 150, 5, 303, 119, "A5-181", 3,"FBA16M9J26TK")
+    ArrangeContainerBill().create_arrangecontainer_fba_link(cookies, 162, 15, 150, 5, 303, 119, "A5-181", 3,"FBA16M9J26TK",6,2)
 
 
 
     #海外仓创建已排柜-供应商仓
-    ArrangeContainerBill().create_arrangecontainer_supplier_link(cookies, 161, 15, 150, 5, 303, 189, "A5-181", 3)
+    #ArrangeContainerBill().create_arrangecontainer_supplier_link(cookies, 161, 15, 150, 5, 303, 189, "A5-181", 3,6,2)
