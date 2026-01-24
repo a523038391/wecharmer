@@ -321,7 +321,7 @@ class ShipmentBill:
         return shipmentbilldata
 
     def fba_shipmentbill_box_link(self, cookies, warehouseId, targetWarehouseId, operateDivisionId,
-                                  shopId, purchaserId, product_code, quantity, fbaShipmentCode):
+                                  shopId, purchaserId, product_code, quantity, fbaShipmentCode,supplierId,companyId):
         """
         创建发货单按箱链路
         :param sendOutGoodsType:仓库中转类型
@@ -334,7 +334,7 @@ class ShipmentBill:
         :return:
         """
         # 创建采购单按箱上架
-        Stock().purchase_order_box_link(cookies, shopId, warehouseId, operateDivisionId, purchaserId, product_code)
+        Stock().purchase_order_box_link(cookies, shopId, warehouseId, operateDivisionId, purchaserId, product_code,supplierId,companyId)
         # 创建发货单
         shipmentbill_payload = {
             "remark": "备注一下",
@@ -458,7 +458,7 @@ if __name__ == '__main__':
 
     #发货单-按箱
     ShipmentBill().fba_shipmentbill_box_link(cookies, 150, 135, 5, 162, 303,
-                                            "A5-181", 3, "FBA16M9J26TK")
+                                            "A5-181", 3, "FBA16M9J26TK",6,2)
 
     #发货单-按件
     #ShipmentBill().fba_shipmentbill_link_v1(cookies, 150, 189, 5, 162, 303,

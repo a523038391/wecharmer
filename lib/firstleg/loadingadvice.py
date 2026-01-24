@@ -143,12 +143,12 @@ class LoadingAdvice:
 
     def shipmentbill_loadingadvice_link(self, cookies, sourceBillCategory, sourceType, warehouseId, warehouseName,
                                         targetWarehouseId, operateDivisionId,
-                                        shopId, purchaserId, purchaserName, product_code, quantity, fbaShipmentCode):
+                                        shopId, purchaserId, purchaserName, product_code, quantity, fbaShipmentCode,supplierId,companyId):
         # 发货单-按箱-装箱
         shipmentbilldata = ScanPacking().shipmentbill_scanpacking_link(cookies, sourceType, warehouseId,
                                                                        targetWarehouseId, operateDivisionId,
                                                                        shopId, purchaserId, purchaserName, product_code,
-                                                                       quantity, fbaShipmentCode)
+                                                                       quantity, fbaShipmentCode,supplierId,companyId)
 
         # 装柜
         LoadingAdvice().loadingadvice_link(cookies, sourceBillCategory, warehouseId, warehouseName,

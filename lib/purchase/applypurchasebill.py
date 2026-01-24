@@ -311,7 +311,7 @@ if __name__ == '__main__':
     cookies = Login.loginWecharmer()
 
     count = 0
-    while count < 2:
+    while count < 1:
         ApplyPurchaseBill().create_applypurchasebill_link(cookies, 161, 5 ,303,"S7621-202")
         print("这是第 {} 次循环".format(count + 1))
         count += 1

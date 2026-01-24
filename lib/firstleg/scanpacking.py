@@ -158,12 +158,12 @@ class ScanPacking:
             print("装箱出错", e)
 
     def shipmentbill_scanpacking_link(self, cookies, sourceType, warehouseId, targetWarehouseId, operateDivisionId,
-                                      shopId, purchaserId, purchaserName, product_code, quantity, fbaShipmentCode):
+                                      shopId, purchaserId, purchaserName, product_code, quantity, fbaShipmentCode,supplierId,companyId):
         # 创建发货单-按箱-打印
         shipmentbilldata = Printpickingbill().shipmentbill_box_print(cookies, sourceType, warehouseId,
                                                                      targetWarehouseId, operateDivisionId,
                                                                      shopId, purchaserId, purchaserName, product_code,
-                                                                     quantity, fbaShipmentCode)
+                                                                     quantity, fbaShipmentCode,supplierId,companyId)
 
         # 扫描单号并茨取单据信息
         scan_billcode_resp = ScanPacking().scan_billcode(cookies, shipmentbilldata["shipmentBillCode"])

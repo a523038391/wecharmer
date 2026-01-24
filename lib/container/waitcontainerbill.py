@@ -217,8 +217,9 @@ class WaitContainerBill:
 
         waitContainer_resp = WaitContainerBill().create_waitcontainerbill(cookies, booking_payload)
         waitContainer_result = json.loads(waitContainer_resp.text)["result"]
-
-        time.sleep(5)
+        # 送审
+        WaitContainerBill().waitcontainerbill_askapprove(cookies, waitContainer_result)
+        time.sleep(20)
 
         return waitContainer_result
 
@@ -458,6 +459,10 @@ class WaitContainerBill:
         waitContainer_resp = WaitContainerBill().create_waitcontainerbill(cookies, booking_payload)
         waitContainer_result = json.loads(waitContainer_resp.text)["result"]
 
+        # 送审
+        WaitContainerBill().waitcontainerbill_askapprove(cookies, waitContainer_result)
+        time.sleep(20)
+
         return waitContainer_result
 
 
@@ -603,10 +608,10 @@ if __name__ == '__main__':
     cookies = Login.loginWecharmer()
 
     # 海外仓创建待排柜-供应商仓
-    WaitContainerBill().create_waitContainer_supplier_link(cookies, 161, 15, 5, 157, 189, "A5-181",6,2)
+    WaitContainerBill().create_waitContainer_supplier_link(cookies, 161, 15, 5, 303, 189, "A5-181",113,30 )
 
     # 平台仓创建待排柜-供应商仓
-    #WaitContainerBill().create_waitContainer_supplier_fba_link(cookies, 162, 15, 5, 273, "A5-181",6,2)
+    #WaitContainerBill().create_waitContainer_supplier_fba_link(cookies, 162, 15, 5, 303, "A5-181",112,2)
 
     # 海外仓创建待排柜-国内仓
     #WaitContainerBill().create_waitContainer_entity_link(cookies,161,150,5,303,189,"A5-181",3,6,2)

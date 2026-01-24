@@ -451,7 +451,7 @@ class ContainerBill:
     def shipmentbill_containerBill_link(self, cookies, sourceBillCategory, sourceType, shopId, warehouseId,
                                         warehouseName, operateDivisionId, purchaserId, purchaserName, targetWarehouseId,
                                         sourceBillType, customsDeclarationSubId, product_code, quantity,
-                                        fbaShipmentCode):
+                                        fbaShipmentCode,supplierId,companyId):
         """
         创建发货单发货全链路
         :param isLCL:是否拼柜
@@ -470,7 +470,7 @@ class ContainerBill:
                                                                            warehouseId, warehouseName,
                                                                            targetWarehouseId, operateDivisionId,
                                                                            shopId, purchaserId, purchaserName,
-                                                                           product_code, quantity, fbaShipmentCode)
+                                                                           product_code, quantity, fbaShipmentCode,supplierId,companyId)
 
         # 创建货柜列表
         containerBill_data = ContainerBill().create_containerbill_link(cookies, shipmentbilldata["shipmentBillCode"],
@@ -519,12 +519,12 @@ if __name__ == '__main__':
     cookies = Login.loginWecharmer()
     # ContainerBill().get_containerbill(cookies, "EGLV143470577152")
     # ContainerBill().create_containerbill_link(cookies,"BH24062000052",502,303,"李朋","3453353534")
-    count = 0
-    while count < 1:
-        ContainerBill().booking_deliverybill_link(cookies, 507, 161, 15, "恒丰仓库", 5, 303, "李朋", 189, 502, 3,
-                                                  "A5-181")
-        print("这是第 {} 次循环".format(count + 1))
-        count += 1
+    #count = 0
+    #while count < 1:
+    #    ContainerBill().booking_deliverybill_link(cookies, 507, 161, 15, "恒丰仓库", 5, 303, "李朋", 189, 502, 3,
+    #                                              "A5-181")
+    #    print("这是第 {} 次循环".format(count + 1))
+    #    count += 1
 
     # 订舱单-装柜列表
     # ContainerBill().booking_deliverybill_link(cookies, 507, 161, 15, "恒丰仓库", 5, 303, "李朋", 12, 502, 3, "A5-181")
@@ -534,4 +534,4 @@ if __name__ == '__main__':
     #                                                "A5-181")
 
     # 发货单-按箱-货柜列表
-    # ContainerBill().shipmentbill_containerBill_link(cookies,505,1,162, 150, "李朋自营仓",5, 303, "李朋",135,505,3,"A5-181",3, "FBA16M9J26TK")
+    ContainerBill().shipmentbill_containerBill_link(cookies,505,1,162, 150, "李朋自营仓",5, 303, "李朋",135,505,3,"A5-181",3, "FBA16M9J26TK",6,2)

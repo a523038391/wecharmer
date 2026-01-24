@@ -832,12 +832,12 @@ class ArrangeContainerBill:
 if __name__ == '__main__':
     cookies = Login.loginWecharmer()
     # 海外仓创建待已排柜-混合仓
-    ArrangeContainerBill().create_arrangecontainer_link(cookies, 161, 15, 150, 5, 303, 189, "A5-181", 3,6,2)
+    #ArrangeContainerBill().create_arrangecontainer_link(cookies, 161, 15, 150, 5, 303, 189, "A5-181", 3,6,2)
 
     # 平台仓创建已排柜-混合仓
-    ArrangeContainerBill().create_arrangecontainer_fba_link(cookies, 162, 15, 150, 5, 303, 119, "A5-181", 3,"FBA16M9J26TK",6,2)
+    #ArrangeContainerBill().create_arrangecontainer_fba_link(cookies, 162, 15, 150, 5, 303, 119, "A5-181", 3,"FBA16M9J26TK",6,2)
 
 
 
     #海外仓创建已排柜-供应商仓
-    #ArrangeContainerBill().create_arrangecontainer_supplier_link(cookies, 161, 15, 150, 5, 303, 189, "A5-181", 3,6,2)
+    ArrangeContainerBill().create_arrangecontainer_supplier_link(cookies, 161, 15, 150, 5, 303, 189, "A5-181", 3,112,2)

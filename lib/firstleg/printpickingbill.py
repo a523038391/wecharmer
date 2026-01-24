@@ -90,10 +90,10 @@ class Printpickingbill:
 
 
     def shipmentbill_box_print(self,cookies,sourceType,warehouseId, targetWarehouseId, operateDivisionId,
-                                  shopId, purchaserId,purchaserName, product_code, quantity, fbaShipmentCode):
+                                  shopId, purchaserId,purchaserName, product_code, quantity, fbaShipmentCode,supplierId,companyId):
         #创建发货单按箱
         shipmentbilldata=ShipmentBill().fba_shipmentbill_box_link( cookies, warehouseId, targetWarehouseId, operateDivisionId,
-                                  shopId, purchaserId, product_code, quantity, fbaShipmentCode)
+                                  shopId, purchaserId, product_code, quantity, fbaShipmentCode,supplierId,companyId)
 
         #打印
         Printpickingbill().print_link(cookies,sourceType,shipmentbilldata["shipmentbillid"],shipmentbilldata["shipmentBillCode"],purchaserId,purchaserName)

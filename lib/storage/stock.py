@@ -117,7 +117,7 @@ class Stock:
         print("获取装箱库存明细平铺箱贴聚合数据分页resp-----------\n" + resp.text)
         return resp
 
-    def purchase_order_link(self, cookies, shopId, warehouseId, operateDivisionId, purchaserId, product_code):
+    def purchase_order_link(self, cookies, shopId, warehouseId, operateDivisionId, purchaserId, product_code,supplierId,companyId):
         """
         创建采购单入库按sku上架链路
         :param companyId:财务公司抬头id
@@ -130,7 +130,7 @@ class Stock:
         """
         # 创建采购单返回id
         purchaseorderid = PurchaseOrder().create_purchaseorder_link(cookies, shopId, warehouseId, operateDivisionId,
-                                                                    purchaserId, product_code)
+                                                                    purchaserId, product_code,supplierId,companyId)
 
         # 根据采购单id查询详细
         get_purchaseorder_resp = PurchaseOrder().get_purchaseorder(cookies, purchaseorderid)
@@ -331,9 +331,9 @@ if __name__ == '__main__':
     # Stock().get_batchstocks(cookies,5452,161,150)
 
     count = 0
-    while count < 10:
-        Stock().purchase_order_box_link(cookies, 232, 220, 2, 303, "A5-181")
-        #Stock().purchase_order_link(cookies, 161, 150, 2, 303, "H6-118")
+    while count < 1:
+        #Stock().purchase_order_box_link(cookies, 232, 220, 2, 303, "A5-181")
+        Stock().purchase_order_link(cookies, 162, 150, 5, 303, "A5-181",6,2)
 
 
         print("这是第 {} 次循环".format(count + 1))
