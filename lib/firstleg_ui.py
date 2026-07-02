@@ -47,7 +47,8 @@ class FirstLeg_Ui:
 
 
 if __name__ == '__main__':
-    driver = webdriver.Chrome()
+    #driver = webdriver.Chrome()
+    driver = webdriver.Edge()
     driver.maximize_window()
     LoginUi().login(driver)
     #time.sleep(2)

@@ -1,2 +1,2 @@
 "Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
-"passed","Fri Jan 23 20:00:09 CST 2026","Fri Jan 23 20:00:11 CST 2026","1580","testcase","test_freightower","TestFreightower","","","test_freightower_link",""
+"passed","Wed Jul 01 20:00:08 CST 2026","Wed Jul 01 20:00:14 CST 2026","5286","testcase","test_freightower","TestFreightower","","","test_freightower_link",""

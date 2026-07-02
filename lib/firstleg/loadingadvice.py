@@ -159,12 +159,12 @@ class LoadingAdvice:
     def stockupbill_loadingadvice_link(self, cookies, sourceBillCategory, sourceType, shopId, warehouseId,
                                        warehouseName, targetWarehouseId,
                                        operateDivisionId,
-                                       purchaserId, purchaserName, product_code):
+                                       purchaserId, purchaserName, product_code,supplierId,companyId):
         # 备货单-按件-装箱
         stockupbilldata = ScanPacking().stockupbill_scanpacking_link(cookies, sourceType, shopId, warehouseId,
                                                                      targetWarehouseId,
                                                                      operateDivisionId,
-                                                                     purchaserId, purchaserName, product_code)
+                                                                     purchaserId, purchaserName, product_code,supplierId,companyId)
         # 装柜
         LoadingAdvice().loadingadvice_link(cookies, sourceBillCategory, warehouseId, warehouseName,
                                            stockupbilldata["stockUpBillId"],

@@ -28,7 +28,7 @@ class WaitContainerBill:
 
         # 创建一个时间差，表示3天
         three_days = timedelta(days=3)
-        three_days_eta = timedelta(days=90)
+        three_days_eta = timedelta(days=120)
 
         # 将时间差加到当前日期上
         new_date = now + three_days
@@ -608,10 +608,10 @@ if __name__ == '__main__':
     cookies = Login.loginWecharmer()
 
     # 海外仓创建待排柜-供应商仓
-    WaitContainerBill().create_waitContainer_supplier_link(cookies, 161, 15, 5, 303, 189, "A5-181",113,30 )
+    WaitContainerBill().create_waitContainer_supplier_link(cookies, 161, 15, 5, 303, 189, "A5-181",113,61 )
 
     # 平台仓创建待排柜-供应商仓
-    #WaitContainerBill().create_waitContainer_supplier_fba_link(cookies, 162, 15, 5, 303, "A5-181",112,2)
+    #WaitContainerBill().create_waitContainer_supplier_fba_link(cookies, 267, 15, 5, 303, "A5-181",112,2)
 
     # 海外仓创建待排柜-国内仓
     #WaitContainerBill().create_waitContainer_entity_link(cookies,161,150,5,303,189,"A5-181",3,6,2)

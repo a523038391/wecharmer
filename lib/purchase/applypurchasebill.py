@@ -3,7 +3,7 @@
 # @Time : 2024/8/23 下午2:12
 # @Author : lipeng
 # @Email : 523038391@qq.com
-# @File : applypurchasebill.py
+# @File : applypurchasebill_api.py
 # @Project : wecharmer
 import json
 import time
@@ -301,8 +301,8 @@ class ApplyPurchaseBill:
 
 
         # 送审
-        payload = {}
-        ApplyPurchaseBill().applypurchasebill_review(applypurchasebillid, cookies, payload)
+        #payload = {}
+        #ApplyPurchaseBill().applypurchasebill_review(applypurchasebillid, cookies, payload)
 
         return applypurchasebillid
 
@@ -312,12 +312,12 @@ if __name__ == '__main__':
 
     count = 0
     while count < 1:
-        ApplyPurchaseBill().create_applypurchasebill_link(cookies, 161, 5 ,303,"S7621-202")
+        ApplyPurchaseBill().create_applypurchasebill_link(cookies, 161, 5 ,303,"A5-181")
         print("这是第 {} 次循环".format(count + 1))
         count += 1
 
     # 创建常规申购单
-    #ApplyPurchaseBill().create_applypurchasebill_link(cookies, 161, 5 ,303,"S7621-202")
+    #ApplyPurchaseBill().create_applypurchasebill_link(cookies, 161, 5 ,303,"A5-181")
 
     # 创建备货申购单
     #ApplyPurchaseBill().create_stock_applypurchasebill_link(cookies, 161, 5,303,"李朋","A5-181")

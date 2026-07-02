@@ -1,10 +1,12 @@
 # !/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# @Time : 2024/8/27 下午4:36
+# @Time : 2026/5/27 上午11:22
 # @Author : lipeng
 # @Email : 523038391@qq.com
-# @File : inspection.py
+# @File : stock_inspectionv2.py
 # @Project : wecharmer
+
+
 import json
 import math
 import time
@@ -13,13 +15,18 @@ from datetime import datetime, timedelta
 import requests
 
 from conf.baseconfig import waveecharmer_Host
+from interface.firstleg.inspection_api import Inspection_Api
+from interface.purchase.purchaseorder_api import PurchaseOrder_Api
+from interface.supplier.supplier_api import Supplier_Api
+from interface.taskgroup.task_api import Task_Api
 from lib.login import Login
 from lib.productandmaterial.product import Product
 from lib.purchase.purchaseorder import PurchaseOrder
 from lib.supplier.supplier import Supplier
+from lib.supplier.supplier_v2 import Supplierv2
 
 
-class Inspection:
+class Inspectionv2:
     def __init__(self):
         # 获取当前日期和时间
         now = datetime.now()
@@ -32,77 +39,9 @@ class Inspection:
 
         self.formatted_date = new_date.strftime("%Y-%m-%d %H:%M:%S")
 
-    def create_inspection(self, cookies, payload):
-        """
-        创建验货申请
-        :return:
-        """
-        url = f"{waveecharmer_Host}/api/inspection/require"
-        resp = requests.post(url=url, headers=cookies, json=payload)
-        print("创建验货申请resp-----------\n" + resp.text)
-        return resp
-
-    def inspection_submit(self, cookies, inspectionid):
-        """
-        提交
-        :return:
-        """
-        url = f"{waveecharmer_Host}/api/inspection/require/submit/{inspectionid}"
-        resp = requests.put(url=url, headers=cookies)
-        print("提交resp-----------\n" + resp.text)
-        return resp
-
-    def inspection_assign(self, cookies, inspectionid, purchaserId):
-        """
-        指派验货员
-        :return:
-        """
-        url = f"{waveecharmer_Host}/api/inspection/require/assign/{inspectionid}/{purchaserId}"
-        resp = requests.put(url=url, headers=cookies)
-        print("指派验货员resp-----------\n" + resp.text)
-        return resp
-
-    def get_inspection_items(self, cookies, inspectionid):
-        """
-        查询验货单详情
-        :return:
-        """
-        url = f"{waveecharmer_Host}/api/inspection/require/items/{inspectionid}"
-        resp = requests.get(url=url, headers=cookies)
-        print("查询验货单详情resp-----------\n" + resp.text)
-        return resp
-
-    def get_inspection_list(self, cookies, url):
-        """
-        查询验货单列表
-        :return:
-        """
-        resp = requests.get(url=url, headers=cookies)
-        print("查询验货单列表resp-----------\n" + resp.text)
-        return resp
-
-    def create_inspection_report(self, cookies, payload):
-        """
-        创建验货报告
-        :return:
-        """
-        url = f"{waveecharmer_Host}/api/inspection/report"
-        resp = requests.post(url=url, headers=cookies, json=payload)
-        print("创建验货报告resp-----------\n" + resp.text)
-        return resp
-
-    def inspection_askapprove(self, cookies, inspection_report_id):
-        """
-        送审
-        :return:
-        """
-        url = f"{waveecharmer_Host}/api/inspection/report/askapprove/{inspection_report_id}"
-        resp = requests.put(url=url, headers=cookies)
-        print("送审resp-----------\n" + resp.text)
-        return resp
-
-    def inspection_purchaseorder_report(self, cookies, shopId, warehouseId, operateDivisionId,
-                                        purchaserId, product_code,supplierId,companyId):
+    def inspection_purchaseorder_report(self, cookies, shopId, shopAccount, warehouseId, operateDivisionId, operaterId,
+                                        purchaserId,
+                                        product_code, salesPlanDate, expectedShelfDate, supplierId, companyId):
         """
         备货验货-创建验货申请报告链路
         :param requireType:收货类型
@@ -117,21 +56,32 @@ class Inspection:
         """
 
         # 创建采购单工厂入库
-        supplierstockin_data = Supplier().supplierstockin_link(cookies, shopId, warehouseId, operateDivisionId,
-                                                               purchaserId, product_code,supplierId,companyId)
+        supplierstockin_data = Supplierv2().supplierstockinv2_link(cookies, shopId, shopAccount, warehouseId,
+                                                                   operateDivisionId, operaterId, purchaserId,
+                                                                   product_code, salesPlanDate, expectedShelfDate,
+                                                                   supplierId, companyId)
 
-        # 获取某个采购单的所有明细，根据采购单ds(头程订舱用)
-        purchaseorder_details = PurchaseOrder().get_purchaseorder_details(cookies,
-                                                                          supplierstockin_data["purchaseOrderId"])
+        # 获取采购单明细
+        purchaseOrderDetailId_resp = PurchaseOrder_Api().get_purchaseorderv1_details(cookies, supplierstockin_data[
+            "purchaseOrderId"])
+        skuDetailDimensionDetails = json.loads(purchaseOrderDetailId_resp.text)["result"]["skuDetailDimensionDetails"]
 
-        # 获取供应商库存分页列表
-        supplierinventory_page_resp = Supplier().get_supplierinventory_page(cookies,
-                                                                            supplierstockin_data["purchaseOrderId"], 1)
-        supplierinventory_page_result = json.loads(supplierinventory_page_resp.text)["result"]
+        # 获取供应商库存
+        supplierinventoryv1_payload = {
+            "purchaseOrderIds": [
+                supplierstockin_data[
+                    "purchaseOrderId"]
+            ],
+            "pageSize": 9999,
+            "supplierInventoryWarehouse": 1,
+            "znd": 1779851864808
+        }
+
+        page_supplierinventoryv1_resp=Supplier_Api().page_supplierinventoryv1(cookies,supplierinventoryv1_payload)
+        page_supplierinventoryv1_result=json.loads(page_supplierinventoryv1_resp.text)["result"]
 
         items = []
-
-        for item in supplierinventory_page_result["items"]:
+        for item in page_supplierinventoryv1_result["items"]:
             # 查询产品对外关系分页
             sellersku_payload = {
                 "shopIds": [
@@ -149,6 +99,7 @@ class Inspection:
 
             sellersku_resp = Product().sellersku_page(cookies, sellersku_payload)
             sellersku_result = json.loads(sellersku_resp.text)["result"]
+            print(item["skuId"])
             query_sku_resp=Product().query_sku_byids(cookies,item["skuId"])
             query_sku_result=json.loads(query_sku_resp.text)["result"][0]
 
@@ -205,29 +156,29 @@ class Inspection:
             "remark": "",
             "bookingBillCode": "",
             "attachments": [],
-            "sourceBillCategory": 507,
+            "sourceBillCategory": 200,
             "isCheckSku": False,
             "items": items
         }
 
-        inspection_resp = Inspection().create_inspection(cookies, inspection_payload)
+        inspection_resp = Inspection_Api().create_inspection(cookies, inspection_payload)
         inspectionid = json.loads(inspection_resp.text)["result"]
 
         # 提交验货申请
-        Inspection().inspection_submit(cookies, inspectionid)
+        Inspection_Api().inspection_submit(cookies, inspectionid)
 
         # 指派验货员
-        Inspection().inspection_assign(cookies, inspectionid, 303)
+        Inspection_Api().inspection_assign(cookies, inspectionid, purchaserId)
 
         # 查询验货单列表
         url = f"{waveecharmer_Host}/api/inspection/require/page?status=1,2,3,5,6&sorts=%7B%22field%22:%22id%22,%22order%22:%22desc%22%7D&purchaseOrderCode={supplierstockin_data["purchaseOrderCode"]}&pageIndex=1&pageSize=10"
         print(url)
 
-        inspection_list_resp = Inspection().get_inspection_list(cookies, url)
+        inspection_list_resp = Inspection_Api().get_inspection_list(cookies, url)
         inspection_list_result = json.loads(inspection_list_resp.text)["result"]
 
         # 查询验货申请单详情
-        inspection_items_resp = Inspection().get_inspection_items(cookies, inspectionid)
+        inspection_items_resp = Inspection_Api().get_inspection_items(cookies, inspectionid)
         inspection_items_result = json.loads(inspection_items_resp.text)["result"]
 
         # 创建验货报告
@@ -269,27 +220,37 @@ class Inspection:
             "goodItemInputs": goodItemInputs
         }
 
-        inspection_report_resp = Inspection().create_inspection_report(cookies, inspection_report_payload)
+        inspection_report_resp = Inspection_Api().create_inspection_report(cookies, inspection_report_payload)
         inspection_report_id = json.loads(inspection_report_resp.text)["result"]
 
         # 送审
-        Inspection().inspection_askapprove(cookies, inspection_report_id)
+        Inspection_Api().inspection_askapprove(cookies, inspection_report_id)
 
         inspection_data = {"purchaseorderid": supplierstockin_data["purchaseOrderId"]}
+        time.sleep(70)
+
+        #采购单更新交货数量
+        purchaseorderv1_payload = {}
+        PurchaseOrder_Api().purchaseorderv1_quantity(cookies,purchaseorderv1_payload)
         time.sleep(2)
 
+        #生成库存池
+
+        waitapplycontainer_payload={}
+        Task_Api().create_waitapplycontainer(cookies,waitapplycontainer_payload)
+        time.sleep(2)
+        #执行排柜规则
+
+        execution__payload={}
+        Task_Api().out_execution(cookies,execution__payload)
         return inspection_data
+
 
 
 if __name__ == '__main__':
     cookies = Login.loginWecharmer()
+    Inspectionv2().inspection_purchaseorder_report(cookies, 162,"LIPENG_US", 129, 5, 303, 303, "B101-003", "2026-08", "2026-09-30", 113,
+                                                  29)
 
-
-    count = 0
-    while count < 3:
-        # 备货验货
-        Inspection().inspection_purchaseorder_report(cookies, 161, 15, 5, 303, "B101-003", 70, 2)
-
-        print("这是第 {} 次循环".format(count + 1))
-        count += 1
-
+    #578
+    #629

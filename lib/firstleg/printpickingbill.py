@@ -115,10 +115,10 @@ class Printpickingbill:
 
 
     def stockupbill_print(self,cookies,sourceType, shopId, warehouseId, targetWarehouseId, operateDivisionId,
-                                   purchaserId,purchaserName, product_code):
+                                   purchaserId,purchaserName, product_code,supplierId,companyId):
         #创建备货单按件
         stockupbilldata=StockupBill().create_stockupbill_link_v1(cookies, shopId, warehouseId, targetWarehouseId, operateDivisionId,
-                                   purchaserId, product_code)
+                                   purchaserId, product_code,supplierId,companyId)
         # 打印
         Printpickingbill().print_link(cookies, sourceType, stockupbilldata["stockUpBillId"],
                                       stockupbilldata["sourceCode"], purchaserId, purchaserName)

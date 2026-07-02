@@ -264,12 +264,12 @@ class ScanPacking:
 
     def stockupbill_scanpacking_link(self, cookies, sourceType, shopId, warehouseId, targetWarehouseId,
                                      operateDivisionId,
-                                     purchaserId, purchaserName, product_code):
+                                     purchaserId, purchaserName, product_code,supplierId,companyId):
 
         # 创建备货单-按件-打印
         stockupbilldata = Printpickingbill().stockupbill_print(cookies, sourceType, shopId, warehouseId,
                                                                targetWarehouseId, operateDivisionId,
-                                                               purchaserId, purchaserName, product_code)
+                                                               purchaserId, purchaserName, product_code,supplierId,companyId)
 
         # 获取所有产品装箱信息
         all_productcode_resp = ScanPacking().scan_all_productcode(cookies, sourceType, stockupbilldata["stockUpBillId"],

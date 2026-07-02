@@ -347,7 +347,7 @@ class StockupBill:
 
 
     def create_stockupbill_link_v1(self, cookies, shopId, warehouseId, targetWarehouseId, operateDivisionId,
-                                   purchaserId, product_code):
+                                   purchaserId, product_code,supplierId,companyId):
         """
         创建备货单链路-按件
         :param shopId:商品id
@@ -358,7 +358,7 @@ class StockupBill:
         :return:
         """
         # 创建采购单按件上架
-        Stock().purchase_order_link(cookies, shopId, warehouseId, operateDivisionId, purchaserId, product_code)
+        Stock().purchase_order_link(cookies, shopId, warehouseId, operateDivisionId, purchaserId, product_code,supplierId,companyId)
 
         # 创建备货单
         stockupbill_payload = {

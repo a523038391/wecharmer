@@ -230,12 +230,11 @@ class ContainerBill:
         # 生成报关合同
         declaration_contract_payload = {
             "containerBillId": containerBill_data["containerBillid"],
-            "currency": "USD",
-            "isPurchaseOrderUnitPrice": False,
             "dimensionType": 2,
             "getGenerateContractDimensionDto": {
                 "companyAndSupplierList": [
                     {
+                        "isOriginalCurrencyComputeDeclarePrice": True,
                         "supplierId": declaration_contract_result["companyAndSupplierList"][0]["supplierId"],
                         "supplierName": declaration_contract_result["companyAndSupplierList"][0]["supplierName"],
                         "companyId": declaration_contract_result["companyAndSupplierList"][0]["companyId"],
@@ -246,7 +245,9 @@ class ContainerBill:
                             "overseasReceiver"],
                         "customsDeclarationSubId": customsDeclarationSubId,
                         "customsDeclarationSubName": "浙江微诚",
-                        "contractGroupTag": 1
+                        "contractGroupTag": 1,
+                        "declarationCurrency": "CNY",
+                        "preDeclarationCurrency": "CNY"
                     }
                 ]
             }
@@ -419,7 +420,7 @@ class ContainerBill:
 
     def stockupbill_containerBill_link(self, cookies, sourceBillCategory, sourceType, shopId, warehouseId,
                                        warehouseName, operateDivisionId, purchaserId, purchaserName, targetWarehouseId,
-                                       sourceBillType, customsDeclarationSubId, product_code):
+                                       sourceBillType, customsDeclarationSubId, product_code,supplierId,companyId):
         """
         创建备货单发货全链路
         :param isLCL:是否拼柜
@@ -438,7 +439,7 @@ class ContainerBill:
                                                                          shopId, warehouseId, warehouseName,
                                                                          targetWarehouseId,
                                                                          operateDivisionId,
-                                                                         purchaserId, purchaserName, product_code)
+                                                                         purchaserId, purchaserName, product_code,supplierId,companyId)
 
         # 创建货柜列表
         sourceCodes=[stockupbilldata["sourceCode"]]
@@ -530,8 +531,11 @@ if __name__ == '__main__':
     # ContainerBill().booking_deliverybill_link(cookies, 507, 161, 15, "恒丰仓库", 5, 303, "李朋", 12, 502, 3, "A5-181")
 
     # 备货单-按件-货柜列表
-    # #ContainerBill().stockupbill_containerBill_link(cookies, 502, 2, 161, 150, "李朋自营仓", 5, 303, "李朋", 11, 502, 3,
-    #                                                "A5-181")
-
+    count = 0
+    while count < 200:
+        ContainerBill().stockupbill_containerBill_link(cookies, 502, 2, 161, 150, "李朋自营仓", 5, 303, "李朋", 11, 502, 3,
+                                                        "A5-181",6,2)
+        print("这是第 {} 次循环".format(count + 1))
+        count += 1
     # 发货单-按箱-货柜列表
-    ContainerBill().shipmentbill_containerBill_link(cookies,505,1,162, 150, "李朋自营仓",5, 303, "李朋",135,505,3,"A5-181",3, "FBA16M9J26TK",6,2)
+    #ContainerBill().shipmentbill_containerBill_link(cookies,505,1,162, 150, "李朋自营仓",5, 303, "李朋",135,505,3,"A5-181",3, "FBA16M9J26TK",6,2)

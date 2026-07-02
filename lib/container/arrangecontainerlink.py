@@ -152,12 +152,12 @@ class ArrangeContainerLink:
             sourceCodes.append(stockUpBillCode["stockUpBillCode"])
 
          #创建货柜列表
-        #containerBill_data = ContainerBill().create_containerbill_link(cookies, sourceCodes,
-        #                                                               sourceType,
-        #                                                               purchaserId,
-        #                                                               purchaserName, customsDeclarationSubId
-        #                                                              )
-        #return containerBill_data
+        containerBill_data = ContainerBill().create_containerbill_link(cookies, sourceCodes,
+                                                                       sourceType,
+                                                                       purchaserId,
+                                                                       purchaserName, customsDeclarationSubId
+                                                                      )
+        return containerBill_data
 
 
 
@@ -175,9 +175,9 @@ if __name__ == '__main__':
     #ArrangeContainerLink().arrangecontainer_inspection_oversea_link(cookies,"607" ,161, 15,"恒丰仓库" ,150, 5, 303, "李朋",189, "A5-181", 3,3,6,2)
 
     #排柜平台仓全链路
-    #ArrangeContainerLink().arrangecontainer_inspection_Fba_link(cookies,"607" ,162, 15,"恒丰仓库" ,150, 5, 303, "李朋",119, "A5-181", 3,"FBA16M9J26TK",6,2)
+    #ArrangeContainerLink().arr angecontainer_inspection_Fba_link(cookies,"607" ,162, 15,"恒丰仓库" ,150, 5, 303, "李朋",119, "A5-181", 3,"FBA16M9J26TK",6,2)
 
     #排柜单海外仓供应商仓-链路
-    ArrangeContainerLink().arrangecontainer_inspection_supplier_link(cookies,"607" ,161, 15,"恒丰仓库" ,150, 5, 303, "李朋",189, "A5-181", 3,3,502,113,29)
+    ArrangeContainerLink().arrangecontainer_inspection_supplier_link(cookies,"607" ,161, 15,"恒丰仓库" ,150, 5, 303, "李朋",189, "A5-181", 3,3,502,867,62)
 
 
