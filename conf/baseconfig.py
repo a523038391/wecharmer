@@ -12,7 +12,7 @@ waveecharmer_ui = "http://192.168.5.197:9091"
 waveecharmer_emc_Host="http://192.168.5.197:55626"
 
 # 账号
-userName = "lipeng"
+userName = "pinghuayu"
 
 # 密码
 passWord = "Aa123456!"

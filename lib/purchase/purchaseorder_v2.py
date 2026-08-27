@@ -26,7 +26,7 @@ class PurchaseOrderv2:
     def __init__(self):
         pass
 
-    def create_purchaseorderv2_link(self, cookies, shopId, shopAccount,warehouseId, operateDivisionId, operaterId, purchaserId,
+    def create_purchaseorderv2_link(self, cookies, shopId, shopAccount,warehouseId, operateDivisionId, operaterId,operaterName, purchaserId,
                                     product_code, salesPlanDate, expectedShelfDate, supplierId, companyId):
         """
         创建采购单链路
@@ -41,17 +41,17 @@ class PurchaseOrderv2:
 
         # 创建申购单返回code
         applypurchasebillv2code1 = ApplyPurchaseBillv2().create_applypurchasebillv2_link(cookies, shopId,shopAccount,
-                                                                                         operateDivisionId, operaterId,
+                                                                                         operateDivisionId,operaterName, operaterId,
                                                                                          product_code, salesPlanDate,
                                                                                          expectedShelfDate)
 
         applypurchasebillv2code2 = ApplyPurchaseBillv2().create_applypurchasebillv2_link(cookies, shopId,shopAccount,
-                                                                                         operateDivisionId, operaterId,
+                                                                                         operateDivisionId,operaterName, operaterId,
                                                                                          product_code, salesPlanDate,
                                                                                          expectedShelfDate)
 
         applypurchasebillv2code3 = ApplyPurchaseBillv2().create_applypurchasebillv2_link(cookies, shopId,shopAccount,
-                                                                                         operateDivisionId, operaterId,
+                                                                                         operateDivisionId,operaterName, operaterId,
                                                                                          product_code, salesPlanDate,
                                                                                          expectedShelfDate)
 
@@ -96,7 +96,7 @@ class PurchaseOrderv2:
 
         for item in page_applypurchasebillv2_result["items"]:
             day+=1
-            unitPrice += 50
+            #unitPrice += 50
 
             # 解析为 datetime 对象（时区信息会被保留）
             dt = datetime.fromisoformat(item["latestContractDeliveryDate"])
@@ -170,5 +170,5 @@ if __name__ == '__main__':
     cookies = Login.loginWecharmer()
 
     # 创建采购单
-    PurchaseOrderv2().create_purchaseorderv2_link(cookies, 161,"LIPENG", 129, 5, 303, 303, "B101-003", "2026-08", "2026-09-30", 113,
+    PurchaseOrderv2().create_purchaseorderv2_link(cookies, 161,"LIPENG", 129, 5, 303, 303, "A5-307", "2026-08", "2026-09-30", 113,
                                                   30)

@@ -25,7 +25,7 @@ class ApplyPurchaseBillv2:
     def __init__(self):
         pass
 
-    def create_applypurchasebillv2_link(self, cookies, shopId,shopAccount, operateDivisionId, operaterId, product_code,salesPlanDate,expectedShelfDate):
+    def create_applypurchasebillv2_link(self, cookies, shopId,shopAccount, operateDivisionId,operaterName, operaterId, product_code,salesPlanDate,expectedShelfDate):
         """
         创建常规申购单链路
         :param applyPurchaseType:申购方式
@@ -65,7 +65,7 @@ class ApplyPurchaseBillv2:
                 "skuId": item["id"],
                 "quantity": quantity,
                 "operaterId": operaterId,
-                "operaterName": "李朋",
+                "operaterName": operaterName,
                 "replenishmentSuggestQuantity": None,
                 "shopId": shopId,
                 "shopAccount": shopAccount,
@@ -104,4 +104,4 @@ class ApplyPurchaseBillv2:
 
 if __name__ == '__main__':
     cookies = Login.loginWecharmer()
-    ApplyPurchaseBillv2().create_applypurchasebillv2_link(cookies, 161,"LIPENG", 2, 217, "V123-109","2026-08","2026-09-30")
+    ApplyPurchaseBillv2().create_applypurchasebillv2_link(cookies, 161,"LIPENG", 2, "",217, "V123-109","2026-08","2026-09-30")

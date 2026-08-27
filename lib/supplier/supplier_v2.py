@@ -24,7 +24,7 @@ class Supplierv2:
     def __init__(self):
         pass
 
-    def supplierstockinv2_link(self, cookies, shopId, shopAccount, warehouseId, operateDivisionId, operaterId,
+    def supplierstockinv2_link(self, cookies, shopId, shopAccount, warehouseId, operateDivisionId, operaterId,operaterName,
                                purchaserId,
                                product_code, salesPlanDate, expectedShelfDate, supplierId, companyId):
         """
@@ -38,7 +38,7 @@ class Supplierv2:
 
         # 创建采购单返回id
         purchaseorderv1id = PurchaseOrderv2().create_purchaseorderv2_link(cookies, shopId, shopAccount, warehouseId,
-                                                                          operateDivisionId, operaterId, purchaserId,
+                                                                          operateDivisionId, operaterId,operaterName, purchaserId,
                                                                           product_code, salesPlanDate,
                                                                           expectedShelfDate, supplierId, companyId)
         time.sleep(2)

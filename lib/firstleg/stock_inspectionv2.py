@@ -39,7 +39,7 @@ class Inspectionv2:
 
         self.formatted_date = new_date.strftime("%Y-%m-%d %H:%M:%S")
 
-    def inspection_purchaseorder_report(self, cookies, shopId, shopAccount, warehouseId, operateDivisionId, operaterId,
+    def inspection_purchaseorder_report(self, cookies, shopId, shopAccount, warehouseId, operateDivisionId, operaterId,operaterName,
                                         purchaserId,
                                         product_code, salesPlanDate, expectedShelfDate, supplierId, companyId):
         """
@@ -57,7 +57,7 @@ class Inspectionv2:
 
         # 创建采购单工厂入库
         supplierstockin_data = Supplierv2().supplierstockinv2_link(cookies, shopId, shopAccount, warehouseId,
-                                                                   operateDivisionId, operaterId, purchaserId,
+                                                                   operateDivisionId, operaterId,operaterName, purchaserId,
                                                                    product_code, salesPlanDate, expectedShelfDate,
                                                                    supplierId, companyId)
 
@@ -249,8 +249,8 @@ class Inspectionv2:
 
 if __name__ == '__main__':
     cookies = Login.loginWecharmer()
-    Inspectionv2().inspection_purchaseorder_report(cookies, 162,"LIPENG_US", 129, 5, 303, 303, "B101-003", "2026-08", "2026-09-30", 113,
-                                                  29)
+    Inspectionv2().inspection_purchaseorder_report(cookies, 161,"LIPENG", 129, 5, 469,"冯花宇", 469, "A5-181", "2026-08", "2026-12-30", 113,
+                                                  2)
 
     #578
     #629
