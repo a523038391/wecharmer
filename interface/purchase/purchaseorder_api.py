@@ -35,6 +35,16 @@ class  PurchaseOrder_Api:
         print("获取采购单明细resp-----------\n" + resp.text)
         return resp
 
+    def get_purchaseorder_groups(self, cookies, purchaseorderv1id):
+        """
+        根据id获取采购单明细分组
+        :return:
+        """
+        url = f"{waveecharmer_Host}/api/purchaseorderv1/{purchaseorderv1id}/detail-groups"
+        resp = requests.get(url=url, headers=cookies)
+        print("获取采购单明细分组resp-----------\n" + resp.text)
+        return resp
+
 
     def purchaseorderv1_review(self, purchaseorderv1id, cookies, payload):
         """

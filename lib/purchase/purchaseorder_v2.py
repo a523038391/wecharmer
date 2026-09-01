@@ -170,5 +170,5 @@ if __name__ == '__main__':
     cookies = Login.loginWecharmer()
 
     # 创建采购单
-    PurchaseOrderv2().create_purchaseorderv2_link(cookies, 161,"LIPENG", 129, 5, 303, 303, "A5-307", "2026-08", "2026-09-30", 113,
+    PurchaseOrderv2().create_purchaseorderv2_link(cookies, 161,"LIPENG", 129, 5, 303, "李朋", 303,"A5-181", "2026-08", "2026-12-30", 6,
                                                   30)

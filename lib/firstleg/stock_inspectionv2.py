@@ -249,7 +249,7 @@ class Inspectionv2:
 
 if __name__ == '__main__':
     cookies = Login.loginWecharmer()
-    Inspectionv2().inspection_purchaseorder_report(cookies, 161,"LIPENG", 129, 5, 469,"冯花宇", 469, "A5-181", "2026-08", "2026-12-30", 113,
+    Inspectionv2().inspection_purchaseorder_report(cookies, 161,"LIPENG", 129, 5, 303,"李朋", 469, "A5-181", "2026-08", "2026-12-30", 113,
                                                   2)
 
     #578
