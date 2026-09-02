@@ -12,6 +12,7 @@ item = {"李朋测试品-凳子-绿色-S":{"id":5452,"skucode":"LIPENG456-B-P"},
 
 
 
+
 #仓库
 warehouse = {"李朋自营仓":{"id":150,"warehouseName":"李朋自营仓"},"西邮WPLA5海外仓":{"id":11},"FBA流水测试":{"id":135}}
 

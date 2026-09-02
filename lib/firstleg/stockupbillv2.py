@@ -290,5 +290,5 @@ if __name__ == '__main__':
     #                                              30)
 
     # 按箱创建备货单
-    StockupBill().create_stockupbill_box_link(cookies, 161,"LIPENG", 150,350, 5, 303, "李朋", 303,"A5-181", "2026-08", "2026-12-30", 6,
-                                                  30,3)
+    StockupBill().create_stockupbill_box_link(cookies, 161,"LIPENG", 150,350, 5, 303, "李朋", 303,"B101-003", "2026-08", "2026-12-30", 6,
+                                                  30,1)
