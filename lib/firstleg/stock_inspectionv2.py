@@ -11,6 +11,8 @@ import json
 import math
 import time
 from datetime import datetime, timedelta
+from runner import load_parameters
+
 
 import requests
 
@@ -227,7 +229,7 @@ class Inspectionv2:
         Inspection_Api().inspection_askapprove(cookies, inspection_report_id)
 
         inspection_data = {"purchaseorderid": supplierstockin_data["purchaseOrderId"]}
-        time.sleep(70)
+        time.sleep(80)
 
         #采购单更新交货数量
         purchaseorderv1_payload = {}
@@ -249,8 +251,17 @@ class Inspectionv2:
 
 if __name__ == '__main__':
     cookies = Login.loginWecharmer()
-    Inspectionv2().inspection_purchaseorder_report(cookies, 162,"LIPENG_US", 129, 5, 303,"李朋", 303, "A5-181", "2026-08", "2026-12-30", 113,
-                                                  2)
+    Inspectionv2().inspection_purchaseorder_report(cookies, 161,"LIPENG", 129,
+                                                  5,
+                                                  303,"李朋", 303, "A5-181",
+                                                  "2026-08", "2027-02-20", 920,
+                                                 29)
+
+    # params = load_parameters()
+    # Inspectionv2().inspection_purchaseorder_report(
+    #     cookies,
+    #     **params,
+    # )
 
     #578
     #629

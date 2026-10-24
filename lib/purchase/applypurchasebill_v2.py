@@ -11,7 +11,7 @@ import json
 import time
 
 import requests
-
+from datetime import datetime, timedelta
 from conf.baseconfig import waveecharmer_Host
 from interface.purchase.applypurchasebill_api import ApplyPurchaseBill_Api
 from lib.login import Login
@@ -24,6 +24,8 @@ from lib.productandmaterial.product import Product
 class ApplyPurchaseBillv2:
     def __init__(self):
         pass
+
+
 
     def create_applypurchasebillv2_link(self, cookies, shopId,shopAccount, operateDivisionId,operaterName, operaterId, product_code,salesPlanDate,expectedShelfDate):
         """
@@ -55,6 +57,10 @@ class ApplyPurchaseBillv2:
         product_resp = Product().query_spulist(cookies, product_list_payload)
         product_result = json.loads(product_resp.text)["result"]["items"][0]["skus"]
 
+        # 期望上架日期减去50天，作为最新合同交付日期
+        latest_contract_delivery_date = (datetime.strptime(expectedShelfDate, "%Y-%m-%d")
+                                         - timedelta(days=50)).strftime("%Y-%m-%d")
+
         # 创建申购单明细
         details = []
         quantity = 0
@@ -75,6 +81,7 @@ class ApplyPurchaseBillv2:
                 "countryTwoCharCode": "US",
                 "salesPlanDate": salesPlanDate,
                 "expectedShelfDate": expectedShelfDate,
+                "latestContractDeliveryDate": latest_contract_delivery_date,
                 "applyPurchaseBillType": 1,
                 "isUrgent": False,
                 "remark": "",
@@ -104,4 +111,4 @@ class ApplyPurchaseBillv2:
 
 if __name__ == '__main__':
     cookies = Login.loginWecharmer()
-    ApplyPurchaseBillv2().create_applypurchasebillv2_link(cookies, 161,"LIPENG", 2, "",217, "V123-109","2026-08","2026-09-30")
+    ApplyPurchaseBillv2().create_applypurchasebillv2_link(cookies, 161,"LIPENG", 2, "",217, "V123-109","2026-08","2026-12-30")
